@@ -1,0 +1,30 @@
+ESERCIZI DA SVOLGERE - Apprendimento Automatico e Profondo (Deep Learning)
+==========================================================================
+
+Esercizio 1) Object Detection con Bounding Box
+----------------------------------------------
+Applicare una delle tecniche viste a lezione per l'object detection tramite
+bounding box, allo scopo di costruire un riconoscitore di oggetti all'interno
+di una immagine presa con una fotocamera.
+
+Dataset: Object365
+  - Dataset di immagini HQ (high-quality) con bounding boxes di oggetti
+  - 365 categorie di oggetti
+  - 600k immagini
+  - 10 milioni di bounding boxes
+
+Note:
+  - Se necessario, eseguire un subsampling per ridurre le dimensioni del dataset.
+
+
+Esercizio 2) Sentiment Analysis / Text Classification
+-----------------------------------------------------
+Realizzare un sistema di text classification per frasi (sequenze testuali) che
+possono essere considerate "positive" o "negative" (sentiment analysis).
+Il sistema deve basarsi sull'uso di architetture transformer.
+
+Suggerimento:
+  - Vedere i modelli offerti da HuggingFace.
+
+Dataset suggeriti:
+  - https://www.kaggle.com/datasets?search=sentiment+analysis

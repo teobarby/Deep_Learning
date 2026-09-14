@@ -1,0 +1,7 @@
+torch
+transformers
+datasets>=2.0
+scikit-learn
+pandas
+matplotlib
+accelerate
