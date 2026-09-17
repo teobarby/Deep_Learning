@@ -15,6 +15,7 @@ import torch
 import torch.nn as nn
 
 from config import (
+    BACKBONE,
     GRID,
     IMG_SIZE,
     NUM_ANCHORS,
@@ -51,16 +52,23 @@ def _scratch_backbone() -> tuple[nn.Sequential, int]:
 
 
 def _pretrained_backbone() -> tuple[nn.Sequential, int]:
-    """ResNet18 pre-addestrata su ImageNet, troncata allo STRIDE richiesto.
+    """ResNet18/34 pre-addestrata su ImageNet, troncata allo STRIDE richiesto.
 
-    In ResNet18 la risoluzione si dimezza a tappe: conv1 (/2), maxpool (/4),
+    In ResNet la risoluzione si dimezza a tappe: conv1 (/2), maxpool (/4),
     layer1 (/4), layer2 (/8), layer3 (/16), layer4 (/32). Fermandosi prima si
     ottiene una griglia piu' fine (utile per gli oggetti piccoli) al prezzo di
-    feature meno profonde.
+    feature meno profonde. ResNet18 e ResNet34 hanno gli stessi canali per stadio.
     """
-    from torchvision.models import ResNet18_Weights, resnet18
+    from torchvision.models import ResNet18_Weights, ResNet34_Weights, resnet18, resnet34
 
-    net = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
+    builders = {
+        "resnet18": (resnet18, ResNet18_Weights.IMAGENET1K_V1),
+        "resnet34": (resnet34, ResNet34_Weights.IMAGENET1K_V1),
+    }
+    if BACKBONE not in builders:
+        raise ValueError(f"BACKBONE non supportato: {BACKBONE!r}")
+    build, weights = builders[BACKBONE]
+    net = build(weights=weights)
     # children(): conv1, bn1, relu, maxpool, layer1, layer2, layer3, layer4, avgpool, fc
     layers = list(net.children())
     cut, out_ch = {

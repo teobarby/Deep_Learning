@@ -6,9 +6,15 @@ si costruisce il target di griglia:
     all'anchor box con IoU (di sola forma w,h) massima;
   - gli anchor 'responsabili' hanno objectness target 1 e ricevono la loss di
     coordinate e di classe;
+  - gli oggetti sotto la soglia MIN_OBJ_SIZE non hanno anchor responsabili: la
+    cella che ne contiene il centro e' ignorata (nessuna loss, per ogni anchor);
+  - le box 'crowd' non hanno anchor responsabili: sono ignorate tutte le celle il
+    cui centro cade dentro la box (almeno quella del centro della box);
   - tutti gli altri anchor hanno objectness target 0.
 """
 from __future__ import annotations
+
+import math
 
 import torch
 import torch.nn as nn
@@ -16,8 +22,16 @@ import torch.nn as nn
 from config import (
     LAMBDA_COORD,
     LAMBDA_NOOBJ,
+    is_small,
 )
 from utils import wh_iou
+
+
+def _cells_inside(lo: float, hi: float, S: int) -> range:
+    """Indici delle celle (su un asse) il cui centro (k+0.5)/S cade in [lo, hi]."""
+    first = max(math.ceil(lo * S - 0.5), 0)
+    last = min(math.floor(hi * S - 0.5), S - 1)
+    return range(first, last + 1)
 
 
 def decode_predictions(pred: torch.Tensor, anchors: torch.Tensor):
@@ -66,6 +80,7 @@ class YOLOLoss(nn.Module):
         #  scalari si fanno su tensori CPU, poi si sposta tutto sul device.)
         anchors_cpu = anchors.detach().cpu()
         obj_mask = torch.zeros((B, A, S, S), dtype=torch.bool)
+        ignore_mask = torch.zeros((B, A, S, S), dtype=torch.bool)
         tx = torch.zeros((B, A, S, S))
         ty = torch.zeros((B, A, S, S))
         tw = torch.zeros((B, A, S, S))
@@ -86,6 +101,18 @@ class YOLOLoss(nn.Module):
             best_a = wh_iou(gwh, anchors_cpu).argmax(dim=1)  # (N,) anchor migliore
             for n in range(gt.shape[0]):
                 a, j, i = int(best_a[n]), int(gj[n]), int(gi[n])
+                if gt.shape[1] > 5 and gt[n, 5] > 0:
+                    # box crowd: ignora le celle coperte dalla box
+                    cx, cy, w, h = gt[n, 1:5].tolist()
+                    cols = _cells_inside(cx - w / 2, cx + w / 2, S) or range(i, i + 1)
+                    rows = _cells_inside(cy - h / 2, cy + h / 2, S) or range(j, j + 1)
+                    ignore_mask[b, :, rows.start:rows.stop, cols.start:cols.stop] = True
+                    continue
+                if is_small(float(gt[n, 3]), float(gt[n, 4])):
+                    # sotto soglia: nessun target, ma neppure la penalita'
+                    # no-object sulla sua cella
+                    ignore_mask[b, :, j, i] = True
+                    continue
                 obj_mask[b, a, j, i] = True
                 tx[b, a, j, i] = gxy[n, 0] - i
                 ty[b, a, j, i] = gxy[n, 1] - j
@@ -95,12 +122,13 @@ class YOLOLoss(nn.Module):
                 n_obj += 1
 
         obj_mask = obj_mask.to(device)
+        ignore_mask = ignore_mask.to(device)
         tx, ty = tx.to(device), ty.to(device)
         tw, th = tw.to(device), th.to(device)
         tcls = tcls.to(device)
 
-        # --- maschera noobj: tutti gli anchor non responsabili ---
-        noobj_mask = ~obj_mask
+        # --- maschera noobj: anchor non responsabili e non ignorati ---
+        noobj_mask = ~obj_mask & ~ignore_mask
 
         n_obj = max(n_obj, 1)
 

@@ -1,0 +1,63 @@
+{
+ "grid_example": {
+  "cell": [
+   7,
+   9
+  ],
+  "gt_wh": [
+   0.229,
+   0.574
+  ],
+  "anchor_ious": [
+   0.011,
+   0.064,
+   0.277,
+   0.723,
+   0.313
+  ],
+  "best_anchor": 3
+ },
+ "iou_example": {
+  "A": [
+   1.0,
+   1.0,
+   4.0,
+   3.5
+  ],
+  "B": [
+   2.2,
+   1.8,
+   5.2,
+   4.6
+  ],
+  "iou": 0.238,
+  "inter": 3.06,
+  "areaA": 7.5,
+  "areaB": 8.4
+ },
+ "nms_ious_with_best": [
+  0.63,
+  0.69,
+  0.73,
+  0.8
+ ],
+ "pr_example": {
+  "ranked": [
+   true,
+   true,
+   false,
+   true,
+   true,
+   false,
+   true,
+   false,
+   false,
+   true,
+   false,
+   false
+  ],
+  "n_gt": 8,
+  "ap": 0.6143,
+  "final_recall": 0.75
+ }
+}

@@ -1,0 +1,10 @@
+[
+  {"name": "e0_baseline", "overrides": {}},
+  {"name": "e1_anchor8", "overrides": {"ANCHORS": [[0.054, 0.038], [0.029, 0.07], [0.108, 0.075], [0.058, 0.139], [0.215, 0.151], [0.116, 0.279], [0.43, 0.301], [0.232, 0.558]]}},
+  {"name": "e2_stride16", "overrides": {"STRIDE": 16}},
+  {"name": "e3_stride32", "overrides": {"STRIDE": 32}},
+  {"name": "e4_jitter", "overrides": {"SCALE_JITTER": 0.3}},
+  {"name": "e5_cosine", "overrides": {"LR_SCHEDULE": "cosine"}},
+  {"name": "e6_resnet34", "overrides": {"BACKBONE": "resnet34"}},
+  {"name": "e7_freeze3", "overrides": {"FREEZE_BACKBONE_EPOCHS": 3}}
+]

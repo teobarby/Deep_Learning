@@ -1,0 +1,27 @@
+{
+ "conf": 0.9,
+ "tp": 4119,
+ "fp": {
+  "sfondo (nessun oggetto vicino)": 899,
+  "box imprecisa + classe sbagliata": 176,
+  "classe sbagliata": 51,
+  "box imprecisa (IoU 0,1-0,5)": 841,
+  "duplicato": 48
+ },
+ "fn": {
+  "visto ma con confidenza sotto soglia": 1433,
+  "non visto affatto": 864,
+  "trovato ma box imprecisa": 1082,
+  "trovato con classe sbagliata": 95
+ },
+ "n_gt": 7593,
+ "ignored": 3820,
+ "confusion": {
+  "Chair->Table": 12,
+  "Table->Chair": 8,
+  "Chair->Person": 4,
+  "Person->Chair": 4,
+  "Cabinet->Person": 3,
+  "Table->Cabinet": 2
+ }
+}

@@ -1,0 +1,3 @@
+[
+  {"name": "final_s16_jitter_r34_cosine_e30", "overrides": {"STRIDE": 16, "SCALE_JITTER": 0.3, "BACKBONE": "resnet34", "LR_SCHEDULE": "cosine", "EPOCHS": 30}}
+]

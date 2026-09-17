@@ -1,0 +1,6 @@
+[
+  {"name": "e4_jitter_s16", "overrides": {"STRIDE": 16, "SCALE_JITTER": 0.3}},
+  {"name": "e5_cosine_s16", "overrides": {"STRIDE": 16, "LR_SCHEDULE": "cosine"}},
+  {"name": "e6_resnet34_s16", "overrides": {"STRIDE": 16, "BACKBONE": "resnet34"}},
+  {"name": "e7_freeze3_s16", "overrides": {"STRIDE": 16, "FREEZE_BACKBONE_EPOCHS": 3}}
+]
