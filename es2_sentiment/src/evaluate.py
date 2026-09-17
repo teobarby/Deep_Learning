@@ -1,9 +1,12 @@
-"""Valutazione di un modello gia' addestrato sul set di validazione.
+"""Valutazione di un modello gia' addestrato.
 
 Stampa il classification report e salva la matrice di confusione come immagine.
+Il validation set serve durante lo sviluppo; il test set va valutato una sola
+volta, a modello ormai scelto: sono quelli i numeri da riportare.
 
 Esempio:
-    python src/evaluate.py
+    python src/evaluate.py                       # validation
+    python src/evaluate.py --split test          # valutazione finale
     python src/evaluate.py --model_dir outputs/best_model
 """
 from __future__ import annotations
@@ -44,6 +47,7 @@ def main():
     p.add_argument("--model_dir", default="outputs/best_model")
     p.add_argument("--dataset", default=cfg.dataset, choices=["sst2", "csv"])
     p.add_argument("--csv_path", default=cfg.csv_path)
+    p.add_argument("--split", default="validation", choices=["validation", "test"])
     args = p.parse_args()
     cfg.dataset = args.dataset
     cfg.csv_path = args.csv_path
@@ -55,13 +59,14 @@ def main():
 
     tokenized, _ = build_datasets(cfg)
     collator = DataCollatorWithPadding(tokenizer=tokenizer)
-    loader = DataLoader(tokenized["validation"], batch_size=cfg.batch_size, collate_fn=collator)
+    loader = DataLoader(tokenized[args.split], batch_size=cfg.batch_size, collate_fn=collator)
 
     y_true, y_pred = collect_predictions(model, loader, cfg.device)
     target_names = [cfg.id2label[0], cfg.id2label[1]]
+    print(f"[split] {args.split}  ({len(y_true)} frasi)")
     print(classification_report(y_true, y_pred, target_names=target_names, digits=4))
 
-    out = Path(cfg.output_dir) / "confusion_matrix.png"
+    out = Path(cfg.output_dir) / f"confusion_matrix_{args.split}.png"
     out.parent.mkdir(parents=True, exist_ok=True)
     cm = confusion_matrix(y_true, y_pred)
     disp = ConfusionMatrixDisplay(cm, display_labels=target_names)

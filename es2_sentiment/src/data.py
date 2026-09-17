@@ -4,6 +4,15 @@ Supporta due sorgenti:
   - "sst2": dataset GLUE/SST-2 scaricato da HuggingFace (frasi pos/neg).
   - "csv" : file locale (es. dataset Kaggle) con una colonna di testo e una
             colonna di label binaria (0/1 oppure 'negative'/'positive').
+
+Tre split con ruoli distinti:
+  - train:      addestramento;
+  - validation: scelta del checkpoint migliore durante il training;
+  - test:       valutazione finale, usata una sola volta. Se lo stesso set servisse
+                sia a scegliere il modello sia a misurarlo, il risultato sarebbe
+                ottimistico.
+Per SST-2 il test ufficiale non ha label pubbliche: il validation ufficiale
+(872 frasi) diventa il test, e il validation si ricava da una parte del train.
 """
 from __future__ import annotations
 
@@ -36,13 +45,19 @@ def _normalize_labels(ds: Dataset, label_column: str) -> Dataset:
 
 
 def load_raw(cfg: Config) -> DatasetDict:
-    """Restituisce un DatasetDict con split 'train' e 'validation'."""
+    """Restituisce un DatasetDict con split 'train', 'validation' e 'test'."""
     if cfg.dataset == "sst2":
         # Repo moderno con split gia' pronti (idx, sentence, label).
         raw = load_dataset("stanfordnlp/sst2")
-        # SST-2: lo split di test non ha label pubbliche (-1) -> usiamo
-        # validation come set di valutazione.
-        return DatasetDict(train=raw["train"], validation=raw["validation"])
+        # Il test ufficiale ha label -1 (non pubbliche): il validation ufficiale
+        # fa da test, e un nuovo validation si ricava dal train.
+        # Nota: il train di SST-2 contiene anche sotto-frasi delle stesse frasi,
+        # quindi il validation ricavato qui somiglia al train e le sue metriche
+        # sono ottimistiche. Va bene per scegliere il checkpoint; il risultato da
+        # riportare e' quello sul test (frasi complete, mai viste in training).
+        split = raw["train"].train_test_split(test_size=cfg.val_size, seed=cfg.seed)
+        return DatasetDict(train=split["train"], validation=split["test"],
+                           test=raw["validation"])
 
     if cfg.dataset == "csv":
         if not cfg.csv_path:
@@ -50,8 +65,11 @@ def load_raw(cfg: Config) -> DatasetDict:
         df = pd.read_csv(cfg.csv_path)
         ds = Dataset.from_pandas(df, preserve_index=False)
         ds = _normalize_labels(ds, cfg.label_column)
-        split = ds.train_test_split(test_size=0.1, seed=cfg.seed)
-        return DatasetDict(train=split["train"], validation=split["test"])
+        # 80% train, 10% validation, 10% test
+        first = ds.train_test_split(test_size=0.2, seed=cfg.seed)
+        second = first["test"].train_test_split(test_size=0.5, seed=cfg.seed)
+        return DatasetDict(train=first["train"], validation=second["train"],
+                           test=second["test"])
 
     raise ValueError(f"Dataset non riconosciuto: {cfg.dataset}")
 
@@ -66,6 +84,8 @@ def build_datasets(cfg: Config):
 
     raw["train"] = _subsample(raw["train"], cfg.max_train_samples, cfg.seed)
     raw["validation"] = _subsample(raw["validation"], cfg.max_eval_samples, cfg.seed)
+    # il test non viene sottocampionato: e' il riferimento del risultato finale
+    raw["test"] = _subsample(raw["test"], cfg.max_test_samples, cfg.seed)
 
     text_col = cfg.text_column
     label_col = cfg.label_column

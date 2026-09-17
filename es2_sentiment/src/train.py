@@ -1,5 +1,9 @@
 """Fine-tuning del transformer per sentiment analysis.
 
+Il checkpoint migliore e' scelto sull'F1 del validation set. Il test set non
+viene usato qui: la valutazione finale si fa una volta con
+    python src/evaluate.py --split test
+
 Esempio d'uso:
     python src/train.py                       # SST-2, default
     python src/train.py --epochs 3 --batch_size 32
@@ -66,7 +70,8 @@ def main():
     print(f"[device] {cfg.device}  |  modello: {cfg.model_name}  |  dataset: {cfg.dataset}")
 
     tokenized, tokenizer = build_datasets(cfg)
-    print(f"[dati] train={len(tokenized['train'])}  val={len(tokenized['validation'])}")
+    print(f"[dati] train={len(tokenized['train'])}  val={len(tokenized['validation'])}  "
+          f"test={len(tokenized['test'])} (non usato nel training)")
 
     model = build_model(cfg)
     collator = DataCollatorWithPadding(tokenizer=tokenizer)
@@ -86,7 +91,8 @@ def main():
         per_device_eval_batch_size=cfg.batch_size,
         num_train_epochs=cfg.epochs,
         weight_decay=cfg.weight_decay,
-        warmup_ratio=cfg.warmup_ratio,
+        # transformers >= 5: un float in [0,1) e' la frazione dei passi di warmup
+        warmup_steps=cfg.warmup_ratio,
         logging_steps=50,
         seed=cfg.seed,
         fp16=use_fp16,
@@ -106,7 +112,8 @@ def main():
     resume = getattr(cfg, "resume", False)
     trainer.train(resume_from_checkpoint=resume)
     metrics = trainer.evaluate()
-    print("[valutazione finale]", {k: round(v, 4) for k, v in metrics.items() if isinstance(v, float)})
+    print("[validation, checkpoint migliore]",
+          {k: round(v, 4) for k, v in metrics.items() if isinstance(v, float)})
 
     final_dir = f"{cfg.output_dir}/best_model"
     trainer.save_model(final_dir)

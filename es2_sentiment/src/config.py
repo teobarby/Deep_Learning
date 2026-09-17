@@ -39,7 +39,10 @@ class Config:
     label_column: str = "label"
     # Subsampling: numero massimo di esempi per split (None = tutti).
     max_train_samples: int | None = 20000
-    max_eval_samples: int | None = 2000
+    max_eval_samples: int | None = 2000   # validation (scelta del checkpoint)
+    max_test_samples: int | None = None   # test: sempre completo per SST-2
+    # SST-2: frasi del train tenute da parte come validation
+    val_size: int = 2000
     # Solo per dataset == "csv"
     csv_path: str | None = None
 
