@@ -19,6 +19,7 @@ HERE = Path(__file__).parent
 ES1 = Path(r"C:\Users\matte\IdeaProjects\Deep_Learning\es1_detection")
 OUT_PDF = Path(r"C:\Users\matte\IdeaProjects\Deep_Learning\docs\Studio_Esercizio1_Object_Detection.pdf")
 PHOTO = ES1 / "outputs" / "final_s16_jitter_r34_cosine_e30" / "foto" / "foto_1.jpg"
+PHOTO2 = ES1 / "outputs" / "final_s16_jitter_r34_cosine_e30" / "foto" / "foto_ufficio.jpg"
 facts = json.loads((HERE / "facts.json").read_text())
 extra = json.loads((HERE / "extra.json").read_text())
 
@@ -704,6 +705,22 @@ P("La consegna chiede un riconoscitore per una foto scattata con una fotocamera.
   "vista dal modello, elaborata con <font face='Consolas'>detect.py</font> alla soglia salvata nel checkpoint.")
 img(PHOTO, 13, "Detection sulla foto: entrambe le persone trovate con confidenza 0,96 e 0,98, nessun falso positivo. "
     "Le due figure parziali sul bordo sinistro, piccole e coperte dai fiori, restano sotto la soglia.")
+H2("13.5 Un secondo esempio: una scena d'ufficio", need_cm=10)
+P("La seconda immagine (una scena d'ufficio con più classi insieme) mostra bene sia i pregi sia i limiti. Il "
+  "modello trova <b>tre sedie su quattro</b>, con box precise, e un tavolo sullo sfondo; tutte le predizioni sono "
+  "corrette, quindi la precision è perfetta.")
+img(PHOTO2, 11, "Quattro oggetti rilevati, tutti corretti. Restano fuori le due scrivanie in primo piano, i monitor "
+    "e le lampade.")
+bullets([
+    "<b>Le scrivanie in primo piano non vengono trovate</b>, pur essendo gli oggetti più grandi: è la debolezza "
+    f"misurata sul test (Table ha AP {dec(TEST['per_class']['Table'][3], 2)}, la più bassa). Qui sono anche tagliate "
+    "dal bordo, a forma di L e coperte da oggetti.",
+    "<b>Monitor e lampade restano sotto soglia</b>: uno schermo nero spento su sfondo chiaro e una lampada snodata "
+    "sono lontani dagli esempi tipici del dataset.",
+    "<b>Precision alta, recall basso</b>: è il comportamento atteso alla soglia 0,9, scelta per privilegiare la "
+    "correttezza delle box rispetto al numero di oggetti trovati. Abbassando la soglia si trovano più oggetti, ma "
+    "arrivano anche i falsi positivi.",
+])
 box("Il risultato in una frase", (
     f"Su foto mai viste il detector trova circa la metà degli oggetti richiesti ({dec(TEST['recall'], 2)} di recall) "
     f"e due box su tre sono corrette ({dec(TEST['precision'], 2)} di precision). Funziona bene sulle persone, "
