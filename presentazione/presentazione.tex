@@ -345,29 +345,22 @@
 
 \begin{frame}{Distribuzione del dataset}
   \begin{columns}[T]
-    \begin{column}{0.44\textwidth}
-      \vspace{0.3cm}
-      Sottoinsieme \textbf{sbilanciato}: \textbf{Person} da sola è il 51\% delle box,
+    \begin{column}{0.42\textwidth}
+      \vspace{0.4cm}
+      Sottoinsieme \textbf{sbilanciato}: \textbf{Person} è il 51\% delle box,
       \textbf{Monitor} meno del 2\% $\Rightarrow$ prestazioni attese
       \alert{inferiori sulle classi rare}.
-      \vspace{0.2cm}
+      \vspace{0.3cm}
 
-      \textbf{Regioni ignorate} (come in COCO):
-      \begin{itemize}
-        \item box \textbf{crowd} (una box su un gruppo di oggetti): il 15\% delle annotazioni;
-        \item oggetti \textbf{più piccoli di una cella}.
-      \end{itemize}
-      Non generano obiettivi né penalità: cancellarle insegnerebbe che lì
-      \emph{non c'è nulla}.
-      \vspace{0.2cm}
-
-      \textbf{Compito valutato}: oggetti con lato minore $\geq 1/20$ dell'immagine.
+      \begin{block}{Regioni ignorate (come in COCO)}
+        Box \textbf{crowd} (una box su un gruppo di oggetti, il 15\% delle
+        annotazioni) e oggetti \textbf{più piccoli di una cella}: niente obiettivi,
+        niente penalità. Cancellarli insegnerebbe che lì \emph{non c'è nulla}.
+      \end{block}
     \end{column}
-    \begin{column}{0.56\textwidth}
+    \begin{column}{0.58\textwidth}
       \centering
-      \includegraphics[width=\textwidth]{classi_new.png}\\[2pt]
-      \includegraphics[width=0.78\textwidth]{ignore.png}\\
-      {\scriptsize Verde: da trovare. Arancione: crowd. Giallo: troppo piccolo.}
+      \includegraphics[width=\textwidth]{classi_new.png}
     \end{column}
   \end{columns}
 \end{frame}
@@ -481,87 +474,42 @@ Output (5, 26, 26, 13)
   \end{columns}
 \end{frame}
 
-\begin{frame}{Ottimizzazione: un esperimento per volta}
+\begin{frame}{Ottimizzazione e risultati}
   \begin{columns}[T]
-    \begin{column}{0.56\textwidth}
+    \begin{column}{0.58\textwidth}
       \centering
-      \includegraphics[width=\textwidth]{esperimenti.png}
-    \end{column}
-    \begin{column}{0.44\textwidth}
-      \textbf{Ha funzionato}
+      \includegraphics[width=\textwidth]{esperimenti.png}\\[2pt]
+      {\footnotesize Un esperimento per modifica: così ogni guadagno ha una causa.}
+      \vspace{0.15cm}
       \begin{itemize}
-        \item \alert{stride 16}: \textbf{+0,121} --- campo recettivo doppio
-              ($\sim$275 px invece di 131): gli oggetti grandi entrano nella zona
-              vista da una cella.
-        \item \alert{augmentation} (zoom/traslazione): \textbf{+0,043}, sparisce
-              l'overfitting.
-        \item \alert{ResNet34}: \textbf{+0,052}.
-        \item learning rate coseno: +0,008, ma curva più stabile.
-      \end{itemize}
-      \textbf{Non ha funzionato}
-      \begin{itemize}
-        \item 8 anchor: --0,004 (coprono meglio le forme, ma \textbf{non erano il
-              collo di bottiglia}).
-        \item backbone congelato: dentro il rumore.
+        \item[] {\footnotesize \alert{stride 16} \textbf{+0,121} (campo recettivo
+              $\sim$275 px invece di 131) $\cdot$ \alert{augmentation} \textbf{+0,043}
+              (via l'overfitting) $\cdot$ \alert{ResNet34} \textbf{+0,052}}
+        \item[] {\footnotesize \emph{Scartati}: 8 anchor (--0,004: coprono meglio le
+              forme, ma non erano il collo di bottiglia) e backbone congelato.}
       \end{itemize}
     \end{column}
-  \end{columns}
-\end{frame}
-
-\begin{frame}{Risultati}
-  \begin{columns}[T]
-    \begin{column}{0.46\textwidth}
-      Modello finale valutato \textbf{una sola volta} sul \textbf{test set}
-      (1.499 immagini, 8.383 oggetti):
+    \begin{column}{0.42\textwidth}
+      Modello finale sul \textbf{test set}, valutato \textbf{una sola volta}:
       \begin{center}
       \begin{tabular}{lr}
         \toprule
-        Metrica & Valore \\
-        \midrule
         mAP@0.5 & \textbf{0,444} \\
         F1 & 0,588 \\
-        Precision & 0,660 \\
-        Recall & 0,531 \\
+        Precision / Recall & 0,660 / 0,531 \\
         \bottomrule
       \end{tabular}
       \end{center}
-      \vspace{0.15cm}
-      {\footnotesize Baseline di partenza: \textbf{0,221} $\Rightarrow$ il doppio.
-      Validation 0,465: il calo è atteso, lì sono stati scelti checkpoint e soglia.}
-      \vspace{0.15cm}
+      {\footnotesize Baseline 0,221 $\Rightarrow$ \textbf{il doppio}. Per classe:
+      Person 0,72, Table 0,19 (tavoli coperti e tagliati).}
+      \vspace{0.2cm}
 
       Recall oggetti \textbf{grandi} 0,58 $>$ \textbf{medi} 0,51: il problema del
-      campo recettivo è risolto (nella baseline era 0,38 contro 0,56).
-    \end{column}
-    \begin{column}{0.54\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{ap_classe.png}\\[2pt]
-      {\footnotesize AP per classe. Person 0,72; Table resta la più difficile (0,19):
-      tavoli coperti, tagliati, dai confini ambigui.}
-    \end{column}
-  \end{columns}
-\end{frame}
+      campo recettivo è risolto (nella baseline 0,38 contro 0,56).
+      \vspace{0.2cm}
 
-\begin{frame}{Il riconoscitore su una foto}
-  \begin{columns}[T]
-    \begin{column}{0.56\textwidth}
-      \centering
-      \includegraphics[width=\textwidth]{demo_foto.jpg}
-    \end{column}
-    \begin{column}{0.44\textwidth}
-      Foto scattata con il telefono, mai vista dal modello: entrambe le persone
-      rilevate (0,96 e 0,98), nessun falso positivo.
-      \vspace{0.25cm}
-      \begin{block}{Dove sbaglia (analisi sul validation)}
-        \begin{itemize}
-          \item \textbf{box imprecise}: 42\% dei falsi positivi e 31\% degli oggetti
-                mancati;
-          \item \textbf{confidenza poco separata}: il 41\% degli oggetti mancati era
-                predetto, ma sotto soglia;
-          \item classe sbagliata: solo 2,5\%;
-          \item parte dei ``falsi positivi'' sono oggetti \textbf{non annotati}.
-        \end{itemize}
-      \end{block}
+      {\footnotesize \textbf{Demo dal vivo nel notebook}: detection su una foto
+      scattata con il telefono, mai vista dal modello.}
     \end{column}
   \end{columns}
 \end{frame}
