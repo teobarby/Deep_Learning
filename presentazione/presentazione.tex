@@ -292,8 +292,9 @@
     \end{itemize}
   \end{block}
   \begin{center}
-    \small Nel detector: 5 blocchi \texttt{Conv $\to$ BN $\to$ ReLU} + max-pool
-    riducono $224\times224$ fino alla griglia $7\times7$.
+    \small Nel detector: la ResNet riduce $416\times416$ fino alla griglia
+    $26\times26$ (stride 16); il ``collo'' aggiunge due blocchi
+    \texttt{Conv $\to$ BN $\to$ ReLU} a risoluzione costante.
   \end{center}
 \end{frame}
 
@@ -305,9 +306,13 @@
   \vspace{0.3cm}
   \textbf{Dataset: Object365} (365 classi, 600k immagini, 10M box).
   \begin{itemize}
-    \item Volume incompatibile con un portatile $\Rightarrow$ \alert{subsampling} su due assi.
-    \item \textbf{Classi}: da 365 a \textbf{8} frequenti (Person, Car, Chair, Bottle, Cup, Lamp, Hat, Book).
-    \item \textbf{Immagini}: 4.867 tenute (50.071 box); solo quelle con almeno un oggetto utile.
+    \item Volume incompatibile con un PC $\Rightarrow$ \alert{subsampling} su due assi.
+    \item \textbf{Immagini}: 15 shard scaricati $\to$ \textbf{14.361} immagini (119.215 box),
+          divise in train 11.467 / validation 1.395 / test 1.499.
+    \item \textbf{Classi}: da 365 a \textbf{8}, scelte \emph{misurando} frequenza e dimensione:
+          Person, Chair, Table, Cabinet, Car, Lamp, Picture, Monitor.
+    \item Categorie ``sorelle'' \textbf{unite} (Car + SUV + Van + Pickup): altrimenti un SUV
+          sarebbe sfondo accanto a un'auto identica etichettata come oggetto.
   \end{itemize}
   \begin{center}
     \small Tecnica scelta: \textbf{YOLO}. Griglia, anchor, loss, IoU e NMS sono
@@ -340,27 +345,29 @@
 
 \begin{frame}{Distribuzione del dataset}
   \begin{columns}[T]
-    \begin{column}{0.46\textwidth}
-      \vspace{0.5cm}
-      Sottoinsieme fortemente \textbf{sbilanciato}:
+    \begin{column}{0.44\textwidth}
+      \vspace{0.3cm}
+      Sottoinsieme \textbf{sbilanciato}: \textbf{Person} da sola è il 51\% delle box,
+      \textbf{Monitor} meno del 2\% $\Rightarrow$ prestazioni attese
+      \alert{inferiori sulle classi rare}.
+      \vspace{0.2cm}
+
+      \textbf{Regioni ignorate} (come in COCO):
       \begin{itemize}
-        \item \textbf{Person} da sola: 49,9\% delle box.
-        \item \textbf{Book}: appena 2,6\%.
+        \item box \textbf{crowd} (una box su un gruppo di oggetti): il 15\% delle annotazioni;
+        \item oggetti \textbf{più piccoli di una cella}.
       \end{itemize}
-      \vspace{0.2cm}
-      $\Rightarrow$ prestazioni attese \alert{inferiori sulle classi rare}.
-      \vspace{0.2cm}
-
-      Gli anchor box sono \textbf{scelti a mano} (come indicano le slide),
-      a coprire forme tipiche: piccolo, medio, alto, largo, grande.
+      Non generano obiettivi né penalità: cancellarle insegnerebbe che lì
+      \emph{non c'è nulla}.
       \vspace{0.2cm}
 
-      \textbf{Data augmentation} (in training): \textbf{flip orizzontale} (che
-      ribalta anche le box, $c_x\!\to\!1-c_x$) + leggero \textbf{color jitter}.
+      \textbf{Compito valutato}: oggetti con lato minore $\geq 1/20$ dell'immagine.
     \end{column}
-    \begin{column}{0.54\textwidth}
+    \begin{column}{0.56\textwidth}
       \centering
-      \includegraphics[width=\textwidth]{classi.pdf}
+      \includegraphics[width=\textwidth]{classi_new.png}\\[2pt]
+      \includegraphics[width=0.78\textwidth]{ignore.png}\\
+      {\scriptsize Verde: da trovare. Arancione: crowd. Giallo: troppo piccolo.}
     \end{column}
   \end{columns}
 \end{frame}
@@ -372,28 +379,31 @@
     \begin{column}{0.52\textwidth}
       {\footnotesize
       \begin{semiverbatim}
-Input  3 x 224 x 224
-  Backbone (downsampling x32)
-             -> 512 x 7 x 7   (griglia S)
-  Head 1x1  -> A*(5+C) = 65 canali
-Output (5, 7, 7, 13)
+Input  3 x 416 x 416
+  ResNet34 troncata a layer3 (stride 16)
+             -> 256 x 26 x 26   (griglia S)
+  Collo: 2 x (conv 3x3 + BN + ReLU)
+  Testa 1x1 -> A*(5+C) = 65 canali
+Output (5, 26, 26, 13)
       \end{semiverbatim}}
       \vspace{0.1cm}
       \begin{itemize}
         \item Rete \textbf{completamente convoluzionale}.
-        \item \textbf{245} box candidate per immagine ($5\times7\times7$).
+        \item \textbf{3.380} box candidate per immagine ($5\times26\times26$).
       \end{itemize}
     \end{column}
     \begin{column}{0.46\textwidth}
-      \begin{block}{Due backbone a confronto}
-        \begin{itemize}
-          \item \textbf{Da zero}: Conv--BN--ReLU + max-pool (15,8M par.).
-          \item \alert{\textbf{ResNet18 pre-addestrata}} su ImageNet, poi
-                fine-tunata (11,2M par.) --- \emph{transfer learning}.
-        \end{itemize}
+      \begin{block}{Backbone: transfer learning}
+        \alert{\textbf{ResNet34 pre-addestrata}} su ImageNet e fine-tunata.
+        Alternative provate: ResNet18 (--0,05 di mAP) e un backbone scritto
+        interamente da zero.
       \end{block}
-      {\footnotesize In entrambi i casi anchor, target, loss, IoU e NMS
-      restano \textbf{implementati a mano}: cambia solo l'estrattore di feature.}
+      {\footnotesize Anchor, target, loss, IoU e NMS restano \textbf{implementati a
+      mano}: cambia solo l'estrattore di feature.}
+      \vspace{0.15cm}
+      {\footnotesize Il \textbf{troncamento} decide il compromesso: stride piccolo
+      $\to$ griglia fine ma campo recettivo ridotto; stride grande $\to$ vede più
+      contesto ma celle grossolane.}
     \end{column}
   \end{columns}
 \end{frame}
@@ -404,7 +414,7 @@ Output (5, 7, 7, 13)
     b_x=\sigma(t_x)+c_x,\quad b_y=\sigma(t_y)+c_y,\quad
     b_w=a_w e^{t_w},\quad b_h=a_h e^{t_h}
   \]
-  \begin{block}{Quattro componenti (normalizzate per numero di oggetti)}
+  \begin{block}{Quattro componenti}
     \centering
     \begin{tabular}{llll}
       \toprule
@@ -412,13 +422,15 @@ Output (5, 7, 7, 13)
       \midrule
       Coordinate & MSE & $\lambda=5$ & anchor responsabili \\
       Objectness & BCE & $1$ & anchor responsabili \\
-      No-object & BCE & $\lambda=0{,}5$ & anchor non responsabili \\
+      No-object & BCE & $\lambda=10$ & anchor vuoti \emph{e non ignorati} \\
       Classe & Cross-entropy & $1$ & anchor responsabili \\
       \bottomrule
     \end{tabular}
   \end{block}
-  Pesi asimmetrici: su 245 box quasi tutte sono vuote $\Rightarrow$ evitano la
-  soluzione degenere \alert{``non c'è mai niente''}.
+  Su 3.380 box quasi tutte sono vuote: il termine no-object è normalizzato come
+  \textbf{media sulle celle vuote} (non dipende dalla griglia) e pesato $\lambda=10$,
+  il rapporto del YOLO originale. Troppo basso $\to$ oggetti ovunque; troppo alto
+  $\to$ \alert{``non c'è mai niente''}.
 \end{frame}
 
 \begin{frame}{Inferenza: non-max suppression}
@@ -445,23 +457,111 @@ Output (5, 7, 7, 13)
   persona con un cappello); due box sovrapposte della stessa classe no.
 \end{frame}
 
-\begin{frame}{Valutazione e ottimizzazione dei tempi}
+\begin{frame}{Come si misura un detector}
   \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \textbf{Metrica}: \textbf{precision} e \textbf{recall} a IoU $\geq 0{,}5$
-      (l'IoU \`e la misura del corso), implementata a mano. Niente mAP.
-      \vspace{0.2cm}
-      \begin{alertblock}{Stato del training}
-        Il training finale \textbf{non è ancora stato completato}:
-        nessun valore di precision/recall disponibile. Tutti i componenti
-        sono però implementati e verificati.
+    \begin{column}{0.52\textwidth}
+      Una predizione è \textbf{corretta} se ha IoU $\geq 0{,}5$ con un oggetto della
+      stessa classe non ancora abbinato; le altre sono falsi positivi.
+      \[ P=\frac{TP}{TP+FP}\qquad R=\frac{TP}{N_{ogg}}\qquad F_1=\frac{2PR}{P+R} \]
+      \begin{alertblock}{La trappola della soglia fissa}
+        Lo stesso modello: \textbf{F1 0,145} a soglia 0,25 e \textbf{0,249} a 0,65.
+        Confrontare modelli a soglia fissa è ingannevole.
       \end{alertblock}
     \end{column}
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{mAP@0.5}
+        Si fa variare la soglia, si costruisce la curva \textbf{precision--recall} e
+        se ne prende l'\textbf{area} (AP), mediata sulle classi.
+        \textbf{Non dipende dalla soglia} $\Rightarrow$ è la metrica con cui si
+        confrontano le varianti e si sceglie il checkpoint.
+      \end{block}
+      {\footnotesize La soglia d'uso (0,9) è poi quella che massimizza l'F1 sul
+      validation, salvata nel checkpoint.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Ottimizzazione: un esperimento per volta}
+  \begin{columns}[T]
+    \begin{column}{0.56\textwidth}
       \centering
-      \includegraphics[width=\textwidth]{tempi.pdf}\\
-      {\footnotesize Ridurre la risoluzione dimezza i tempi;
-      scelto $224$ ($\sim$23 min).}
+      \includegraphics[width=\textwidth]{esperimenti.png}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      \textbf{Ha funzionato}
+      \begin{itemize}
+        \item \alert{stride 16}: \textbf{+0,121} --- campo recettivo doppio
+              ($\sim$275 px invece di 131): gli oggetti grandi entrano nella zona
+              vista da una cella.
+        \item \alert{augmentation} (zoom/traslazione): \textbf{+0,043}, sparisce
+              l'overfitting.
+        \item \alert{ResNet34}: \textbf{+0,052}.
+        \item learning rate coseno: +0,008, ma curva più stabile.
+      \end{itemize}
+      \textbf{Non ha funzionato}
+      \begin{itemize}
+        \item 8 anchor: --0,004 (coprono meglio le forme, ma \textbf{non erano il
+              collo di bottiglia}).
+        \item backbone congelato: dentro il rumore.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Risultati}
+  \begin{columns}[T]
+    \begin{column}{0.46\textwidth}
+      Modello finale valutato \textbf{una sola volta} sul \textbf{test set}
+      (1.499 immagini, 8.383 oggetti):
+      \begin{center}
+      \begin{tabular}{lr}
+        \toprule
+        Metrica & Valore \\
+        \midrule
+        mAP@0.5 & \textbf{0,444} \\
+        F1 & 0,588 \\
+        Precision & 0,660 \\
+        Recall & 0,531 \\
+        \bottomrule
+      \end{tabular}
+      \end{center}
+      \vspace{0.15cm}
+      {\footnotesize Baseline di partenza: \textbf{0,221} $\Rightarrow$ il doppio.
+      Validation 0,465: il calo è atteso, lì sono stati scelti checkpoint e soglia.}
+      \vspace{0.15cm}
+
+      Recall oggetti \textbf{grandi} 0,58 $>$ \textbf{medi} 0,51: il problema del
+      campo recettivo è risolto (nella baseline era 0,38 contro 0,56).
+    \end{column}
+    \begin{column}{0.54\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{ap_classe.png}\\[2pt]
+      {\footnotesize AP per classe. Person 0,72; Table resta la più difficile (0,19):
+      tavoli coperti, tagliati, dai confini ambigui.}
+    \end{column}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Il riconoscitore su una foto}
+  \begin{columns}[T]
+    \begin{column}{0.56\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{demo_foto.jpg}
+    \end{column}
+    \begin{column}{0.44\textwidth}
+      Foto scattata con il telefono, mai vista dal modello: entrambe le persone
+      rilevate (0,96 e 0,98), nessun falso positivo.
+      \vspace{0.25cm}
+      \begin{block}{Dove sbaglia (analisi sul validation)}
+        \begin{itemize}
+          \item \textbf{box imprecise}: 42\% dei falsi positivi e 31\% degli oggetti
+                mancati;
+          \item \textbf{confidenza poco separata}: il 41\% degli oggetti mancati era
+                predetto, ma sotto soglia;
+          \item classe sbagliata: solo 2,5\%;
+          \item parte dei ``falsi positivi'' sono oggetti \textbf{non annotati}.
+        \end{itemize}
+      \end{block}
     \end{column}
   \end{columns}
 \end{frame}
@@ -479,7 +579,9 @@ Output (5, 7, 7, 13)
   \begin{itemize}
     \item \textbf{Dataset}: SST-2 (frasi brevi etichettate pos/neg, da HuggingFace).
     \item Corrisponde alla traccia (``frasi positive o negative''); nessun token Kaggle richiesto.
-    \item Valutazione sul \emph{validation set} (872 frasi mai viste).
+    \item Tre split: \textbf{train}; \textbf{validation} (2000 frasi ricavate dal
+          train) per scegliere il checkpoint; \textbf{test} (le 872 frasi del
+          validation ufficiale) usato \emph{una sola volta} per i risultati.
   \end{itemize}
   \begin{center}
     \small Il codice supporta comunque un CSV Kaggle via \texttt{-{}-dataset csv}.
@@ -590,22 +692,24 @@ Output (5, 7, 7, 13)
 \begin{frame}{Risultati}
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
-      Fine-tuning su MPS ($\sim$18 min). Metriche sul validation set:
+      Fine-tuning su GPU ($\sim$1,5 min). Metriche sul \textbf{test set}
+      (mai usato per addestrare né per scegliere il modello):
       \vspace{0.2cm}
       \begin{center}
       \begin{tabular}{lr}
         \toprule
         Metrica & Valore \\
         \midrule
-        Accuracy & \textbf{89,9\%} \\
-        F1 & \textbf{0,901} \\
-        Precision & 0,897 \\
-        Recall & 0,905 \\
+        Accuracy & \textbf{89,8\%} \\
+        F1 & \textbf{0,902} \\
+        Precision & 0,885 \\
+        Recall & 0,919 \\
         \bottomrule
       \end{tabular}
       \end{center}
       \vspace{0.2cm}
-      Errori \textbf{bilanciati} (46 vs 42): nessun bias di classe.
+      Errori: 53 negative $\to$ positive, 36 positive $\to$ negative.
+      Leggera tendenza verso \emph{positive}: il 56\% del train è positivo.
     \end{column}
     \begin{column}{0.5\textwidth}
       \centering
@@ -619,14 +723,14 @@ Output (5, 7, 7, 13)
   \begin{block}{Output del modello}
     {\footnotesize\ttfamily
     {}[positive~~99.9\%] I absolutely loved this film\\
-    {}[negative~~99.4\%] the worst purchase I have ever made\\
-    {}[positive~~99.9\%] It is not bad at all, quite enjoyable\\
-    {}[negative~~69.3\%] predictable but the acting saved it}
+    {}[negative~~99.5\%] the worst purchase I have ever made\\
+    {}[positive~~99.8\%] It is not bad at all, quite enjoyable\\
+    {}[negative~~75.3\%] predictable but the acting saved it}
   \end{block}
   \begin{itemize}
-    \item \emph{``not bad''}: contiene \emph{bad} ma è classificata \textbf{positiva} al 99,9\%.
+    \item \emph{``not bad''}: contiene \emph{bad} ma è classificata \textbf{positiva} al 99,8\%.
           L'attention collega \emph{bad} a \emph{not} --- è l'\alert{esempio della slide 11}.
-    \item Frase ambigua $\Rightarrow$ confidenza bassa (69\%): il modello \emph{segnala} l'incertezza.
+    \item Frase ambigua $\Rightarrow$ confidenza bassa (75\%): il modello \emph{segnala} l'incertezza.
   \end{itemize}
 \end{frame}
 
@@ -640,36 +744,40 @@ Output (5, 7, 7, 13)
     \toprule
      & Esercizio 1 --- Detection & Esercizio 2 --- Sentiment \\
     \midrule
-    Codice & Completo (869 righe) & Completo (412 righe) \\
-    Pipeline verificata & Si', end-to-end & Si', end-to-end \\
-    Modello addestrato & \alert{No} & Si' \\
-    Risultati & Non disponibili & Acc.\ 89,9\% --- F1 0,901 \\
+    Tecnica & YOLO implementato a mano & DistilBERT fine-tunato \\
+    Dati & 14.361 immagini, 8 classi & SST-2, 20.000 frasi \\
+    Metodo & train / validation / test separati & train / validation / test separati \\
+    Ottimizzazione & 8 esperimenti controllati & --- \\
+    Risultati (test) & \textbf{mAP@0.5 0,444} (da 0,221) & \textbf{Acc.\ 89,8\% --- F1 0,902} \\
     \bottomrule
   \end{tabular}
   \end{center}
   \vspace{0.3cm}
   \begin{itemize}
-    \item \textbf{Es.\ 2 concluso}: risultati solidi, allineati a DistilBERT su SST-2.
-    \item \textbf{Es.\ 1 completo nell'implementazione}, ma manca il training finale ($\sim$23 min).
+    \item \textbf{Es.\ 1}: il detector funziona su foto reali; l'ottimizzazione ha
+          \textbf{raddoppiato} il mAP, con ogni scelta motivata da una misura.
+    \item \textbf{Es.\ 2}: risultati solidi, allineati a DistilBERT su SST-2.
+    \item In entrambi il \textbf{test set} è stato usato una sola volta, a scelte concluse.
   \end{itemize}
 \end{frame}
 
 \begin{frame}{Aderenza al programma del corso}
-  Il progetto usa \textbf{solo tecniche viste a lezione}: YOLO, anchor, IoU, NMS;
-  CNN; \textbf{transfer learning} (backbone ResNet18 pre-addestrato, fine-tuning
-  di BERT); transformer, self-attention; Adam, batch norm; data augmentation.
-  \begin{block}{Rimosso perch\'e non nel corso $\to$ sostituito}
+  \textbf{Nucleo del progetto: solo tecniche viste a lezione.} YOLO, anchor scelti a
+  mano, IoU, NMS; CNN, ResNet, batch norm; \textbf{transfer learning} (backbone
+  pre-addestrato, fine-tuning di BERT); transformer e self-attention; Adam;
+  data augmentation.
+  \begin{block}{Aggiunto oltre il programma, con motivazione}
     \begin{itemize}
-      \item anchor k-means $\to$ \textbf{anchor scelti a mano}
-      \item meccanismo di ``ignore'' $\to$ rimosso
-      \item metrica mAP $\to$ \textbf{precision/recall a IoU $\geq 0{,}5$}
-      \item LeakyReLU $\to$ \textbf{ReLU}; cosine + gradient clipping $\to$ rimossi
+      \item \textbf{mAP@0.5}: precision e recall dipendono dalla soglia, quindi non
+            permettono di confrontare modelli calibrati diversamente.
+      \item \textbf{Regioni ignorate} (box crowd e oggetti sotto la risoluzione):
+            senza, la loss insegna che in quei punti \emph{non c'è nulla}.
+      \item \textbf{Decadimento coseno} del learning rate: curva finale più stabile.
     \end{itemize}
   \end{block}
   \begin{center}
-    \small Mantenuti solo i dettagli \textbf{essenziali} (senza cui i modelli non
-    convergono): parametrizzazione sigmoid/exp e pesi $\lambda$ della loss;
-    encoder BERT pre-addestrato + tokenizer.
+    \small Ogni aggiunta è stata \textbf{misurata} con un esperimento controllato,
+    non adottata per sentito dire.
   \end{center}
 \end{frame}
 
