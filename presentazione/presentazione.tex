@@ -187,7 +187,8 @@
     \end{itemize}
   \end{block}
   \begin{center}
-    \small Adam è l'ottimizzatore usato in \textbf{entrambi} gli esercizi.
+    \small Adam è l'ottimizzatore usato in \textbf{entrambi} gli esercizi
+    (nell'Es.\ 2 nella variante \textbf{AdamW}).
   \end{center}
 \end{frame}
 
@@ -352,10 +353,10 @@
       \alert{inferiori sulle classi rare}.
       \vspace{0.3cm}
 
-      \begin{block}{Regioni ignorate (come in COCO)}
+      \begin{block}{Regioni ignorate (\emph{don't care})}
         Box \textbf{crowd} (una box su un gruppo di oggetti, il 15\% delle
-        annotazioni) e oggetti \textbf{più piccoli di una cella}: niente obiettivi,
-        niente penalità. Cancellarli insegnerebbe che lì \emph{non c'è nulla}.
+        annotazioni) e oggetti \textbf{più piccoli di una cella}: etichetta
+        ``?'', niente obiettivi né penalità. Cancellarli insegnerebbe che lì \emph{non c'è nulla}.
       \end{block}
     \end{column}
     \begin{column}{0.58\textwidth}
@@ -631,7 +632,7 @@ Output (5, 26, 26, 13)
       \begin{block}{Il nostro uso}
         \textbf{Fine-tuning} (transfer learning): si parte da BERT
         pre-addestrato e si aggiunge una testa di classificazione binaria.
-        Modello: \textbf{DistilBERT}, un BERT più leggero.
+        Modello: \textbf{DistilBERT}, un BERT più leggero (6 strati invece di 12).
       \end{block}
     \end{column}
   \end{columns}
@@ -710,22 +711,28 @@ Output (5, 26, 26, 13)
 \end{frame}
 
 \begin{frame}{Aderenza al programma del corso}
-  \textbf{Nucleo del progetto: solo tecniche viste a lezione.} YOLO, anchor scelti a
-  mano, IoU, NMS; CNN, ResNet, batch norm; \textbf{transfer learning} (backbone
-  pre-addestrato, fine-tuning di BERT); transformer e self-attention; Adam;
-  data augmentation.
+  \small
+  \textbf{Nucleo del progetto: tecniche viste a lezione.} YOLO con griglia, anchor
+  scelti a mano e assegnati per IoU, NMS; etichette \emph{don't care} (le nostre
+  \textbf{regioni ignorate}); CNN, ResNet34, batch norm; \textbf{transfer learning}
+  (backbone pre-addestrato, fine-tuning di BERT); transformer e self-attention;
+  Adam, regolarizzazione L2, early stopping; data augmentation.
   \begin{block}{Aggiunto oltre il programma, con motivazione}
     \begin{itemize}
-      \item \textbf{mAP@0.5}: precision e recall dipendono dalla soglia, quindi non
-            permettono di confrontare modelli calibrati diversamente.
-      \item \textbf{Regioni ignorate} (box crowd e oggetti sotto la risoluzione):
-            senza, la loss insegna che in quei punti \emph{non c'è nulla}.
-      \item \textbf{Decadimento coseno} del learning rate: curva finale più stabile.
+      \item \textbf{mAP@0.5} (Es.\ 1): precision e recall dipendono dalla soglia,
+            quindi non confrontano modelli calibrati diversamente.
+      \item \textbf{Learning rate variabile}: decadimento coseno (Es.\ 1, +0,008 di
+            mAP, misurato); warmup e decadimento lineare (Es.\ 2, standard per il
+            fine-tuning di BERT: evita passi grandi sui pesi pre-addestrati).
+      \item \textbf{AdamW} (Es.\ 2): Adam con il weight decay applicato separatamente
+            dal gradiente, ottimizzatore predefinito del Trainer HuggingFace.
+      \item \textbf{DistilBERT} e \textbf{fp16} (Es.\ 2): un BERT più piccolo
+            ottenuto per distillazione e calcoli a mezza precisione, solo per
+            ridurre tempo e memoria.
     \end{itemize}
   \end{block}
   \begin{center}
-    \small Ogni aggiunta è stata \textbf{misurata} con un esperimento controllato,
-    non adottata per sentito dire.
+    Le aggiunte in Es.\ 1 sono state \textbf{misurate} con esperimenti controllati.
   \end{center}
 \end{frame}
 
