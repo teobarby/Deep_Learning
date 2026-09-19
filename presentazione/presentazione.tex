@@ -90,7 +90,11 @@
 \begin{frame}{Dalla rete al forward propagation}
   I neuroni si organizzano in \textbf{layer}: l'output di un layer è l'input del
   successivo (\emph{forward propagation}):
-  \[ \mathbf{a}^{(l)} = g\!\left( W^{(l)} \mathbf{a}^{(l-1)} + \mathbf{b}^{(l)} \right) \]
+  \[ a_i^{(l)} = g\Big( \sum_k \theta_{ik}^{(l-1)} a_k^{(l-1)} \Big)
+     \qquad\text{cioè}\qquad
+     \mathbf{a}^{(l)} = g\big( \Theta^{(l-1)} \mathbf{a}^{(l-1)} \big) \]
+  {\small $\Theta^{(l-1)}$ collega il layer $l-1$ al layer $l$; il bias è incluso
+  tramite la \emph{bias unit} $a_0^{(l-1)}=1$.}
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
       \begin{block}{Feature apprese}
