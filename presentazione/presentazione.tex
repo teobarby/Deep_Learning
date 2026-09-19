@@ -69,48 +69,155 @@
 \end{frame}
 
 % ==================================================================
-\section{Introduzione: reti neurali}
+\section{Introduzione al deep learning}
 % ==================================================================
+
+\begin{frame}{Che cos'è il deep learning}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Machine learning classico}
+        Le \textbf{feature} sono progettate a mano da un esperto; il modello
+        impara solo la funzione che va dalle feature all'output.
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Deep learning}
+        Le feature vengono \textbf{apprese insieme all'obiettivo}
+        (\emph{representational learning}), direttamente dai dati grezzi.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.2cm}
+  \begin{itemize}
+    \item Funzioni complesse ottenute \textbf{componendo} (\emph{nesting}) funzioni
+          semplici, in una sequenza di layer sempre più \textbf{astratti}.
+    \item Approcci principali: reti \textbf{feedforward}, \textbf{convoluzionali}
+          (CNN), \textbf{ricorrenti} (RNN, LSTM), \textbf{Transformer},
+          autoencoder, GAN.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Perché proprio adesso}
+  Le reti neurali esistono da decenni: il salto è avvenuto quando tre fattori si
+  sono combinati (\emph{scale drives deep learning}).
+  \vspace{0.2cm}
+  \begin{columns}[T]
+    \begin{column}{0.32\textwidth}
+      \begin{block}{Dati}
+        Dataset enormi ed etichettati (ImageNet, Object365): le reti grandi
+        continuano a migliorare dove i modelli classici si fermano.
+      \end{block}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{block}{Calcolo}
+        Le \textbf{GPU} rendono veloci le operazioni matriciali: si possono
+        provare più modelli e architetture.
+      \end{block}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{block}{Algoritmi}
+        Nuovi metodi, come il passaggio da \textbf{sigmoide a ReLU}, rendono
+        addestrabili le reti profonde.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.2cm}
+  \begin{center}
+    \small Nel progetto: 14.361 immagini, una GPU consumer e backbone ResNet
+    pre-addestrate, cioè tutti e tre i fattori.
+  \end{center}
+\end{frame}
 
 \begin{frame}{Il neurone}
   \begin{block}{Modello del neurone}
     Il neurone calcola una \textbf{combinazione lineare} degli input e vi applica
     una \textbf{funzione di attivazione} $g$:
-    \[ z = \sum_{j=1}^{n} w_j x_j + b , \qquad a = g(z) \]
+    \[ z = \sum_{j=1}^{n} \theta_j x_j + \theta_0 , \qquad a = g(z) \]
   \end{block}
   \begin{itemize}
-    \item $w_j$ = \textbf{pesi} (quanto conta ogni input), $b$ = \textbf{bias}.
+    \item $\theta_j$ = \textbf{pesi} (quanto conta ogni input), $\theta_0$ =
+          \textbf{bias}.
     \item Con il trucco della \emph{bias unit} $x_0=1$ si scrive compattamente
           $z = \theta^{\top}\mathbf{x}$.
+    \item Con $g$ = logistica il neurone è esattamente la \textbf{regressione
+          logistica}: $h_\theta(\mathbf{x}) = \sigma(\theta^{\top}\mathbf{x})$.
     \item Senza $g$ il neurone è solo un \textbf{prodotto scalare}: è $g$ a dare
           la \alert{non linearità}.
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Dalla rete al forward propagation}
-  I neuroni si organizzano in \textbf{layer}: l'output di un layer è l'input del
-  successivo (\emph{forward propagation}):
-  \[ a_i^{(l)} = g\Big( \sum_k \theta_{ik}^{(l-1)} a_k^{(l-1)} \Big)
-     \qquad\text{cioè}\qquad
-     \mathbf{a}^{(l)} = g\big( \Theta^{(l-1)} \mathbf{a}^{(l-1)} \big) \]
-  {\small $\Theta^{(l-1)}$ collega il layer $l-1$ al layer $l$; il bias è incluso
-  tramite la \emph{bias unit} $a_0^{(l-1)}=1$.}
+\begin{frame}{La rete multilayer}
   \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.55\textwidth}
+      \begin{itemize}
+        \item I neuroni si organizzano in \textbf{layer}: input, uno o più layer
+              \textbf{nascosti}, output.
+        \item Rete \textbf{deep-$L$}: $L$ = numero di layer nascosti + output.
+        \item Ogni unità di un layer riceve tutte le attivazioni del layer
+              precedente (layer \emph{fully connected}).
+        \item $\Theta^{(l)}$ = matrice dei pesi che collega il layer $l$ al
+              layer $l+1$.
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.45\textwidth}
       \begin{block}{Feature apprese}
         La rete \textbf{scopre da sola} le feature nascoste: la semantica la
-        diamo noi. (Es.\ prezzo di una casa: un'unità nascosta può rappresentare
-        la ``dimensione della famiglia''.)
-      \end{block}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \begin{block}{Perché non lineari?}
-        Con sole attivazioni \textbf{lineari} una rete profonda equivale a
-        \textbf{un solo neurone}. Con attivazioni non lineari diventa un
-        \alert{approssimatore universale di funzioni}.
+        diamo noi. Es.\ prezzo di una casa: un'unità nascosta che pesa molto
+        CAP e reddito e poco il resto può rappresentare la ``qualità della
+        zona''.
       \end{block}
     \end{column}
   \end{columns}
+\end{frame}
+
+\begin{frame}{Forward propagation}
+  L'output di un layer è l'input del successivo:
+  \[ a_i^{(l)} = g\Big( \sum_k \theta_{ik}^{(l-1)} a_k^{(l-1)} \Big)
+     \qquad\text{cioè}\qquad
+     \mathbf{z}^{(l)} = \Theta^{(l-1)} \mathbf{a}^{(l-1)}, \quad
+     \mathbf{a}^{(l)} = g\big( \mathbf{z}^{(l)} \big) \]
+  {\small $\Theta^{(l-1)}$ collega il layer $l-1$ al layer $l$; il bias è incluso
+  tramite la \emph{bias unit} $a_0^{(l-1)}=1$.}
+  \vspace{0.2cm}
+  \begin{block}{Dall'input all'output}
+    \[ \mathbf{a}^{(1)} = \mathbf{x} \;\to\; \mathbf{a}^{(2)} \;\to\; \cdots
+       \;\to\; \mathbf{a}^{(L+1)} = h_\Theta(\mathbf{x}) = \hat{y} \]
+    Ogni passo è un \textbf{prodotto matrice-vettore} seguito da $g$ applicata
+    elemento per elemento: per questo le GPU sono così efficaci.
+  \end{block}
+  \begin{center}
+    \small Una CNN e un Transformer fanno la stessa cosa, cambiando solo
+    \emph{quali} pesi collegano quali unità.
+  \end{center}
+\end{frame}
+
+\begin{frame}{Perché non lineari, perché profonde}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Perché non lineari?}
+        Con sole attivazioni \textbf{lineari} la composizione di layer è ancora
+        lineare: una rete profonda equivale a \textbf{un solo neurone}. Con
+        attivazioni non lineari la rete diventa un
+        \alert{approssimatore universale di funzioni}.
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Perché profonde?}
+        \begin{itemize}
+          \item \textbf{Apprendimento gerarchico}: bordi $\to$ parti di volto
+                $\to$ volti; forme d'onda $\to$ fonemi $\to$ parole $\to$ frasi.
+          \item \textbf{Teoria dei circuiti}: una funzione calcolabile con una
+                rete profonda e piccola ($O(\log n)$ layer) richiede a una rete
+                poco profonda un numero di unità \textbf{esponenziale}.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.2cm}
+  \begin{center}
+    \small Nel detector si vede la gerarchia: la ResNet parte dai bordi e arriva
+    a feature che riconoscono sedie e persone.
+  \end{center}
 \end{frame}
 
 \begin{frame}{Funzioni di attivazione}
@@ -118,14 +225,12 @@
     \begin{column}{0.52\textwidth}
       \[ \sigma(z)=\frac{1}{1+e^{-z}} \qquad \mathrm{ReLU}(z)=\max(0,z) \]
       \begin{itemize}
-        \item \textbf{Layer nascosti}: \textbf{ReLU} (oggi lo standard).
+        \item \textbf{Layer nascosti}: logistica fino agli anni '90, poi
+              $\tanh$, oggi \textbf{ReLU}.
         \item \textbf{Output regressione}: lineare / identità.
         \item \textbf{Output binario}: sigmoide (logistica).
         \item \textbf{Output multiclasse}: \textbf{softmax}.
       \end{itemize}
-      \vspace{0.1cm}
-      {\footnotesize Il passaggio da \emph{sigmoide} a \emph{ReLU} è uno dei
-      progressi algoritmici che hanno reso possibile il deep learning.}
     \end{column}
     \begin{column}{0.48\textwidth}
       \centering
@@ -134,101 +239,376 @@
   \end{columns}
   \vspace{0.1cm}
   \[ \mathrm{softmax}(\mathbf{z})_k=\frac{e^{z_k}}{\sum_j e^{z_j}}
-     \quad\text{(la logistica ne è il caso binario)} \]
+     \quad\text{(la logistica ne è il caso con due classi)} \]
+\end{frame}
+
+\begin{frame}{Pro e contro delle attivazioni}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Sigmoidi (logistica e tanh)}
+        \begin{itemize}
+          \item[+] Derivabili ovunque; la logistica ha range $[0,1]$, adatto
+                alle probabilità; $\tanh$ è centrata in 0.
+          \item[--] \textbf{Saturazione}: per $|z|$ grande la derivata è quasi 0
+                e i pesi in ingresso smettono di aggiornarsi.
+          \item[--] La logistica è sempre positiva: i pesi di un neurone si
+                aggiornano tutti nella \textbf{stessa direzione}.
+          \item[--] Mai esattamente 0: nessuna \textbf{sparsità}; serve un
+                esponenziale.
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{ReLU}
+        \begin{itemize}
+          \item[+] Semplicissima da calcolare, anche la derivata.
+          \item[+] \textbf{Non satura} per $z>0$: il gradiente scorre bene.
+          \item[+] Produce zeri veri: \textbf{sparsità}, cioè parti della rete
+                specializzate su input diversi.
+          \item[--] \emph{Dying ReLU}: un neurone sempre a 0 non impara più
+                $\to$ varianti \textbf{Leaky ReLU} ed \textbf{ELU}.
+        \end{itemize}
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.1cm}
+  \begin{center}
+    ReLU + inizializzazione di He è lo stato dell'arte per reti feedforward e
+    convoluzionali: la usano sia la ResNet sia il nostro collo del detector.
+  \end{center}
 \end{frame}
 
 \begin{frame}{La funzione di costo}
   La rete produce $\hat{y}$; la \textbf{loss} misura quanto sbaglia su un
   esempio, il \textbf{costo} $J$ è la media su tutti gli $m$ esempi:
-  \[ J(\theta)=\frac{1}{m}\sum_{i=1}^{m} L\!\left(\hat{y}^{(i)}, y^{(i)}\right) \]
+  \[ J(\Theta)=\frac{1}{m}\sum_{i=1}^{m} L\!\left(\hat{y}^{(i)}, y^{(i)}\right) \]
   \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \begin{block}{Regressione: errore quadratico}
+    \begin{column}{0.33\textwidth}
+      \begin{block}{Regressione}
+        Errore quadratico
         \[ L = \tfrac{1}{2}\left(\hat{y}-y\right)^2 \]
-        {\footnotesize Il fattore $\tfrac{1}{2}$ semplifica la derivata.}
       \end{block}
     \end{column}
-    \begin{column}{0.5\textwidth}
-      \begin{block}{Classificazione: cross-entropy}
+    \begin{column}{0.33\textwidth}
+      \begin{block}{Binaria}
+        Cross-entropy binaria
+        \[ L = -y\log\hat{y} - (1-y)\log(1-\hat{y}) \]
+      \end{block}
+    \end{column}
+    \begin{column}{0.33\textwidth}
+      \begin{block}{Multiclasse}
+        Cross-entropy (softmax)
         \[ L = -\sum_k y_k \log \hat{y}_k \]
       \end{block}
     \end{column}
   \end{columns}
   \vspace{0.2cm}
-  {\footnotesize Nel progetto usiamo \textbf{entrambe}: errore quadratico per le
-  coordinate delle bounding box, cross-entropy per le classi e il sentiment.}
+  {\footnotesize Il detector le usa \textbf{tutte e tre}: quadratica per le
+  coordinate delle box, binaria per ``c'è un oggetto'', multiclasse per la
+  classe. Il classificatore di sentiment usa la cross-entropy su due classi.}
 \end{frame}
 
-\begin{frame}{Apprendimento: gradient descent e backpropagation}
+% ==================================================================
+\section{Addestrare una rete profonda}
+% ==================================================================
+
+\begin{frame}{Gradient descent}
   \begin{block}{Regola di aggiornamento}
     Si aggiornano i parametri nella direzione \textbf{opposta al gradiente}:
     \[ \theta := \theta - \alpha \frac{\partial J}{\partial \theta} \]
     con $\alpha$ = \textbf{learning rate} (ampiezza del passo).
   \end{block}
   \begin{itemize}
-    \item Il gradiente si calcola con la \textbf{backpropagation}: si propaga
-          l'errore all'indietro applicando la \emph{regola della catena},
-          usando la derivata della funzione di attivazione di ogni unità.
-    \item $\alpha$ troppo grande $\to$ si diverge; troppo piccolo $\to$
-          convergenza lentissima.
+    \item $\alpha$ troppo grande $\to$ si oscilla o si diverge; troppo piccolo
+          $\to$ convergenza lentissima.
+    \item $J$ di una rete profonda \textbf{non è convessa}: si arriva a un minimo
+          locale, che in pratica è quasi sempre abbastanza buono.
+    \item Resta da calcolare $\partial J / \partial \theta$ per \textbf{milioni}
+          di pesi in modo efficiente: è il compito della backpropagation.
   \end{itemize}
 \end{frame}
 
-\begin{frame}{Ottimizzazione: dal mini-batch ad Adam}
+\begin{frame}{Backpropagation}
+  Si propaga l'errore \textbf{all'indietro}, dal layer di output verso l'input,
+  applicando la \emph{regola della catena}. Per ogni layer si calcola l'errore
+  $\boldsymbol{\delta}^{(l)}$ delle sue unità:
+  \begin{align*}
+    \boldsymbol{\delta}^{(L+1)} &= \mathbf{a}^{(L+1)} - \mathbf{y}
+      && \text{errore sull'output} \\
+    \boldsymbol{\delta}^{(l)} &= \big(\Theta^{(l)}\big)^{\!\top}
+      \boldsymbol{\delta}^{(l+1)} \odot g'\big(\mathbf{z}^{(l)}\big)
+      && \text{errore riportato indietro} \\
+    \frac{\partial J}{\partial \theta_{ij}^{(l)}} &= a_j^{(l)}\,\delta_i^{(l+1)}
+      && \text{gradiente di ogni peso (mediato sugli esempi)}
+  \end{align*}
   \begin{itemize}
-    \item \textbf{Mini-batch gradient descent}: aggiornare i pesi usando tutto
-          il dataset è proibitivo $\Rightarrow$ si procede a blocchi
-          (tipicamente 32--256 esempi). \emph{Nel progetto: batch da 16.}
+    \item L'errore di un'unità nascosta usa la \textbf{derivata della sua
+          funzione di attivazione} $g'$.
+    \item Costo: circa quello di una forward propagation. Un passo di training
+          = forward + backward + aggiornamento.
+    \item In PyTorch il calcolo è automatico (\emph{autograd}): noi scriviamo
+          solo la forward e la loss.
   \end{itemize}
-  \begin{block}{Migliorare la discesa (medie mobili esponenziali)}
+\end{frame}
+
+\begin{frame}{Gradienti instabili: vanishing ed exploding}
+  Il gradiente di un layer poco profondo è un \textbf{prodotto} di tanti
+  fattori, uno per ogni layer successivo: pesi $\times$ derivate
+  dell'attivazione.
+  \[ \frac{\partial J}{\partial \mathbf{a}^{(1)}} \;\propto\;
+     \prod_{l} \theta^{(l)}\, g'\big(z^{(l)}\big) \]
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Vanishing}
+        Se ogni fattore è $<1$ il prodotto tende a 0. Tipico con la logistica:
+        $\sigma'(z) \le \tfrac{1}{4}$. I primi layer smettono di imparare.
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Exploding}
+        Se i pesi sono grandi, ogni fattore è $>1$ e il prodotto cresce
+        esponenzialmente verso i primi layer. Il training diverge.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.2cm}
+  In entrambi i casi layer diversi imparano a \textbf{velocità diverse}.
+  Rimedi: \textbf{ReLU}, buona \textbf{inizializzazione}, batch normalization,
+  connessioni residue (ResNet).
+\end{frame}
+
+\begin{frame}{Inizializzazione dei pesi}
+  Con input standardizzati e pesi da $\mathcal{N}(0,1)$, la somma
+  $z=\sum_{i=1}^{n}\theta_i x_i$ di $n$ termini ha
+  \[ \mathbb{E}[z]=0, \qquad \mathrm{Var}(z) = n \]
+  Per $n$ grande $z$ \textbf{esplode} (o, all'indietro, svanisce), e con le
+  sigmoidi finisce subito in saturazione.
+  \begin{block}{Soluzione: riscalare i pesi di ogni layer}
+    Si moltiplicano i pesi estratti per $\sqrt{c/n^{(l-1)}}$, con $n^{(l-1)}$ =
+    numero di input del layer, così che $\mathrm{Var}(z)\approx 1$ in ogni layer:
     \begin{itemize}
-      \item \textbf{Momentum}: media mobile del \emph{gradiente} $\to$ aiuta a
-            uscire dai minimi locali e smorza le oscillazioni.
-      \item \textbf{RMSprop}: media mobile del \emph{quadrato} del gradiente
-            $\to$ normalizza le fluttuazioni dividendo per la sua radice.
-      \item \alert{\textbf{Adam}}: combina Momentum e RMSprop, con
-            \emph{bias correction}.
+      \item $c=1$: attivazione lineare, o \textbf{Xavier} per $\tanh$;
+      \item $c=2$: \textbf{He}, per la \textbf{ReLU} (che azzera metà degli
+            input, dimezzando la varianza).
     \end{itemize}
   \end{block}
   \begin{center}
-    \small Adam è l'ottimizzatore usato in \textbf{entrambi} gli esercizi
-    (nell'Es.\ 2 nella variante \textbf{AdamW}).
+    \small Nel progetto i layer nuovi (collo e testa del detector) partono
+    dall'inizializzazione standard di PyTorch; il backbone parte dai pesi
+    pre-addestrati.
+  \end{center}
+\end{frame}
+
+\begin{frame}{Overfitting e regolarizzazione L2}
+  Una rete grande può \textbf{memorizzare} il training set: errore basso sul
+  training, alto su dati nuovi (\emph{overfitting}, alta varianza).
+  \begin{block}{Regolarizzazione L2}
+    Si penalizzano i pesi grandi aggiungendo un termine al costo:
+    \[ J_{\text{reg}}(\Theta) = J(\Theta) + \frac{\lambda}{2m}
+       \sum_{l}\sum_{i,j} \big(\theta_{ij}^{(l)}\big)^2 \]
+    Nel gradient descent diventa $\theta := \theta\big(1-\alpha\tfrac{\lambda}{m}\big)
+    - \alpha\tfrac{\partial J}{\partial\theta}$: a ogni passo i pesi si
+    ``restringono'' (\textbf{weight decay}).
+  \end{block}
+  \begin{itemize}
+    \item \textbf{Perché funziona}: pesi piccoli $\Rightarrow$ $z$ vicino a 0
+          $\Rightarrow$ l'attivazione lavora nella zona quasi \textbf{lineare}
+          $\Rightarrow$ la rete può rappresentare solo funzioni più semplici.
+    \item $\lambda$ grande $\to$ reti più semplici e sparse, meno overfitting;
+          troppo grande $\to$ underfitting.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Dropout, data augmentation, early stopping}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.34\textwidth}
+      \begin{block}{Dropout}
+        Durante il training ogni nodo viene \textbf{eliminato} con probabilità
+        $p$, diversa a ogni esempio.
+        \begin{itemize}
+          \item Si addestrano reti più piccole.
+          \item Nessuna unità può contare su una singola feature: i pesi si
+                distribuiscono.
+          \item \textbf{Mai a test time.}
+        \end{itemize}
+      \end{block}
+    \end{column}
+    \begin{column}{0.32\textwidth}
+      \begin{block}{Data augmentation}
+        Si creano nuovi esempi trasformando quelli esistenti: flip, crop,
+        zoom, rotazioni, variazioni di colore.
+        \\[4pt]
+        Naturale in visione: un'auto riflessa è ancora un'auto.
+      \end{block}
+    \end{column}
+    \begin{column}{0.34\textwidth}
+      \begin{block}{Early stopping}
+        Si ferma il training quando l'errore sul \textbf{validation}
+        ricomincia a salire.
+        \\[4pt]
+        Limite: ottimizza il costo e riduce la varianza \emph{insieme}, mentre
+        L2 separa i due obiettivi (\emph{ortogonalità}).
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.2cm}
+  \begin{center}
+    Nel progetto: \textbf{augmentation} nel detector (flip, colore, zoom e
+    traslazione), \textbf{dropout} dentro DistilBERT, e in entrambi il
+    checkpoint scelto sul validation, che è una forma di early stopping.
+  \end{center}
+\end{frame}
+
+\begin{frame}{Mini-batch gradient descent}
+  Con big data calcolare il gradiente su \textbf{tutti} gli $m$ esempi prima di
+  ogni passo è proibitivo. Si divide il training set in mini-batch e si
+  aggiornano i pesi dopo \textbf{ogni} mini-batch; un'\textbf{epoca} è un
+  passaggio completo sul training set.
+  \vspace{0.2cm}
+  \begin{center}
+  \begin{tabular}{lll}
+    \toprule
+    Dimensione del batch & Nome & Comportamento \\
+    \midrule
+    $m$ & batch GD & passi precisi ma lenti \\
+    $1$ & stochastic GD (SGD) & veloce ma rumoroso, perde la vettorizzazione \\
+    $64$--$512$ & \textbf{mini-batch GD} & compromesso: vettorizzato e frequente \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+  \vspace{0.2cm}
+  \begin{itemize}
+    \item Batch piccoli: convergenza rapida ma soluzione meno precisa; batch
+          grandi: più lenti ma più stabili.
+    \item Il mini-batch deve \textbf{stare in memoria} della GPU.
+          \emph{Nel progetto: 16 immagini per il detector, 16 frasi per BERT.}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Medie mobili esponenziali}
+  Sono il mattone degli ottimizzatori moderni:
+  \[ v_t = \beta\, v_{t-1} + (1-\beta)\, x_t \]
+  \begin{itemize}
+    \item È una media sugli ultimi $\approx \frac{1}{1-\beta}$ valori: con
+          $\beta=0.9$ circa 10, con $\beta=0.98$ circa 50.
+    \item I termini più vecchi pesano meno, perché il loro peso $\beta^{k}$
+          decresce con la distanza.
+    \item $\beta$ grande $\to$ curva più liscia ma in ritardo; $\beta$ piccolo
+          $\to$ segue il rumore.
+  \end{itemize}
+  \begin{block}{Bias correction}
+    Partendo da $v_0=0$ i primi valori sono troppo bassi. Si corregge con
+    \[ \hat{v}_t = \frac{v_t}{1-\beta^{t}} \]
+    All'inizio il fattore normalizza la somma dei pesi; per $t$ grande vale
+    circa 1 e non ha effetto.
+  \end{block}
+\end{frame}
+
+\begin{frame}{Momentum, RMSprop, Adam}
+  \small
+  Si scrive $d\theta$ per il gradiente $\partial J/\partial\theta$ calcolato sul
+  mini-batch.
+  \begin{columns}[T]
+    \begin{column}{0.33\textwidth}
+      \begin{block}{Momentum}
+        Media mobile del \textbf{gradiente}:
+        \[ v = \beta_1 v + (1-\beta_1)\, d\theta \]
+        \[ \theta := \theta - \alpha\, v \]
+        Smorza le oscillazioni e aiuta a \textbf{uscire dai minimi locali}.
+      \end{block}
+    \end{column}
+    \begin{column}{0.33\textwidth}
+      \begin{block}{RMSprop}
+        Media mobile del \textbf{quadrato}:
+        \[ s = \beta_2 s + (1-\beta_2)\, d\theta^2 \]
+        \[ \theta := \theta - \alpha\,\frac{d\theta}{\sqrt{s}+\varepsilon} \]
+        Passi più piccoli dove il gradiente oscilla molto, più grandi dove è
+        piccolo.
+      \end{block}
+    \end{column}
+    \begin{column}{0.33\textwidth}
+      \begin{block}{Adam}
+        \emph{ADAptive Momentum}: le due insieme, con bias correction:
+        \[ \theta := \theta - \alpha\,\frac{\hat{v}}{\sqrt{\hat{s}}+\varepsilon} \]
+        Valori tipici: $\beta_1=0.9$, $\beta_2=0.999$,
+        $\varepsilon=10^{-8}$; si regola solo $\alpha$.
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.2cm}
+  \begin{center}
+    Adam è l'ottimizzatore usato in \textbf{entrambi} gli esercizi (nell'Es.\ 2
+    nella variante \textbf{AdamW}), con $\alpha=10^{-4}$ nel detector e
+    $2\cdot10^{-5}$ per BERT.
   \end{center}
 \end{frame}
 
 \begin{frame}{Batch Normalization}
-  \begin{block}{Idea}
-    Come si normalizzano gli input, si possono normalizzare anche i valori dei
-    \textbf{nodi interni}, usando media e varianza calcolate su ogni
-    \textbf{mini-batch} (poi riscalati con parametri apprendibili).
-  \end{block}
-  \begin{itemize}
-    \item Contrasta il \textbf{covariate shift}: i layer profondi ricevono input
-          la cui distribuzione cambia di continuo durante il training.
-    \item In pratica: si aggiunge un \textbf{layer BN} dopo il layer da
-          normalizzare e si fa la solita backpropagation.
-    \item A test time si usano le medie mobili accumulate durante il training.
-  \end{itemize}
+  \small
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Idea}
+        Come si normalizzano gli input, si normalizzano anche i valori dei
+        \textbf{nodi interni} (prima dell'attivazione), con media e varianza
+        del \textbf{mini-batch}:
+        \[ \mu = \frac{1}{m}\sum_i z_i, \qquad
+           \sigma^2 = \frac{1}{m}\sum_i (z_i-\mu)^2 \]
+        \[ z_{\text{norm}} = \frac{z-\mu}{\sqrt{\sigma^2+\varepsilon}}, \qquad
+           \tilde{z} = \gamma\, z_{\text{norm}} + \beta \]
+        $\gamma,\beta$ si apprendono: media 0 e varianza 1 non sono sempre
+        ottimali (la sigmoide lì è quasi lineare).
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{itemize}
+        \item Contrasta il \textbf{covariate shift}: l'input di un layer profondo
+              dipende da tutti i pesi precedenti e cambia di continuo durante il
+              training. BN ne fissa media e varianza.
+        \item Il rumore delle statistiche del mini-batch fa anche da
+              \textbf{regolarizzazione} (più forte con batch piccoli).
+        \item La normalizzazione assorbe il bias: il layer prima della BN non
+              ne ha bisogno (nel detector: 	exttt{Conv2d(..., bias=False)}).
+        \item \textbf{A test time} si usano le medie mobili esponenziali di
+              $\mu$ e $\sigma^2$ accumulate durante il training.
+      \end{itemize}
+    \end{column}
+  \end{columns}
+  \vspace{0.1cm}
   \begin{center}
-    \small Usata in ogni blocco convoluzionale del detector: \texttt{Conv $\to$ BN $\to$ ReLU}.
+    Usata in ogni blocco convoluzionale del detector:
+    \texttt{Conv $\to$ BN $\to$ ReLU}. Il Transformer usa la variante
+    \emph{layer norm}.
   \end{center}
 \end{frame}
 
-\begin{frame}{Dal neurone al deep learning}
-  \begin{block}{Idea del deep learning}
-    Comporre (\emph{nesting}) funzioni semplici in una sequenza di layer sempre
-    più \textbf{astratti}: le \emph{feature} vengono apprese insieme
-    all'obiettivo (\emph{representational learning}).
+\begin{frame}{Dalla teoria ai due esercizi}
+  \begin{block}{Quello che serve a entrambi}
+    Rete profonda con attivazioni \textbf{ReLU}, loss di \textbf{cross-entropy},
+    backpropagation, mini-batch con \textbf{Adam}, normalizzazione,
+    regolarizzazione e selezione del modello sul \textbf{validation}.
   \end{block}
-  \textbf{Approcci principali del corso}: feedforward, \textbf{CNN} (immagini),
-  reti ricorrenti, \textbf{Transformer} (sequenze), autoencoder, GAN.
-  \vspace{0.3cm}
-  \begin{block}{I due esercizi usano due di questi approcci}
-    \begin{itemize}
-      \item \textbf{Object detection} $\to$ rete \textbf{convoluzionale} (CNN).
-      \item \textbf{Sentiment analysis} $\to$ \textbf{Transformer}.
-    \end{itemize}
-  \end{block}
+  \vspace{0.2cm}
+  \begin{columns}[T]
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Object detection}
+        Immagini $\to$ rete \textbf{convoluzionale} (CNN), che sfrutta la
+        struttura spaziale dei pixel. \emph{Architettura YOLO.}
+      \end{block}
+    \end{column}
+    \begin{column}{0.5\textwidth}
+      \begin{block}{Sentiment analysis}
+        Frasi $\to$ \textbf{Transformer}, che mette in relazione ogni parola con
+        tutte le altre. \emph{Modello BERT.}
+      \end{block}
+    \end{column}
+  \end{columns}
+  \vspace{0.2cm}
+  \begin{center}
+    \small In entrambi i casi si parte da una rete \textbf{pre-addestrata}
+    (\emph{transfer learning}).
+  \end{center}
 \end{frame}
 
 % ==================================================================
