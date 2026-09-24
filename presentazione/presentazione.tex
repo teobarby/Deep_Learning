@@ -31,8 +31,8 @@
 \title[Progetto DL]{Progetto di Apprendimento Automatico e Profondo}
 \subtitle{Object Detection e Sentiment Analysis: da YOLO ai Transformer}
 \author{Matteo Barbieri}
-\institute[Apprendimento Automatico e Profondo]{Apprendimento Automatico e Profondo}
-\date{16 luglio 2026}
+\institute[Apprendimento Profondo]{Apprendimento Profondo}
+\date{24 settembre 2026}
 
 % Scaletta all'inizio di ogni sezione (come nel deck ML)
 \AtBeginSection[]{%
@@ -75,57 +75,38 @@
 \begin{frame}{Che cos'è il deep learning}
   Studio e applicazione di metodi basati su \textbf{reti neurali} per problemi
   ad alto impatto: visione, linguaggio, parlato.
-  \vspace{0.2cm}
+  \vspace{0.1cm}
   \begin{columns}[T]
     \begin{column}{0.5\textwidth}
       \begin{block}{Machine learning classico}
-        Le \textbf{feature} che descrivono gli esempi sono progettate a mano;
-        si apprende solo la funzione obiettivo.
+        \centering
+        {\footnotesize dati $\to$ \textbf{feature definite a mano}
+        (selezione, costruzione, trasformazione) $\to$ Learning $\to$ f(X)}
+        \\[4pt]
+        {\footnotesize La definizione delle feature è manuale: è il
+        passo \emph{fondamentale} della pipeline.}
       \end{block}
     \end{column}
     \begin{column}{0.5\textwidth}
       \begin{block}{Deep learning}
-        Le feature sono \textbf{apprese insieme alla funzione obiettivo}
-        (\emph{representational learning}).
+        \centering
+        {\footnotesize dati $\to$ trasformazioni \textbf{apprese}
+        $z_1 \to z_2 \to \dots \to z_h$ $\to$ Classifier $\to$ f(X)}
+        \\[4pt]
+        {\footnotesize Rappresentazioni intermedie via via più astratte, es.\
+        \emph{pixel $\to$ edge $\to$ motif $\to$ parti $\to$ oggetti}
+        (\emph{representational learning}).}
       \end{block}
     \end{column}
   \end{columns}
-  \vspace{0.2cm}
+  \vspace{0.1cm}
   \begin{itemize}
     \item Funzioni complesse calcolate \textbf{annidando} (\emph{nesting})
           funzioni semplici: una sequenza di layer sempre più \textbf{astratti}.
     \item Approcci principali: reti \textbf{feedforward} profonde, reti
-          \textbf{convoluzionali} (CNN), reti \textbf{ricorrenti} (LSTM),
-          \textbf{Transformer}, autoencoder, GAN.
+          \textbf{convoluzionali} (CNN), reti \textbf{ricorrenti},
+          \textbf{Transformer}, ecc.
   \end{itemize}
-\end{frame}
-
-\begin{frame}{Perché proprio adesso: \emph{scale drives deep learning}}
-  \begin{columns}[T]
-    \begin{column}{0.32\textwidth}
-      \begin{block}{Dati}
-        Più dati e modelli più profondi: le reti grandi continuano a migliorare
-        quando i modelli classici smettono.
-      \end{block}
-    \end{column}
-    \begin{column}{0.32\textwidth}
-      \begin{block}{Calcolo}
-        Calcolo più veloce (GPU): si possono provare più modelli e
-        architetture.
-      \end{block}
-    \end{column}
-    \begin{column}{0.32\textwidth}
-      \begin{block}{Algoritmi}
-        Nuovi metodi, per esempio il passaggio dalla \textbf{sigmoide} alla
-        \textbf{ReLU}.
-      \end{block}
-    \end{column}
-  \end{columns}
-  \vspace{0.3cm}
-  \begin{center}
-    \small Nel progetto: 14.361 immagini, una GPU e reti pre-addestrate su
-    grandi dataset.
-  \end{center}
 \end{frame}
 
 \begin{frame}{Il neurone}
@@ -143,31 +124,29 @@
           $\varphi$ a dare la \alert{non linearità}.
   \end{itemize}
 \end{frame}
-
-\begin{frame}{La rete multilayer}
-  \begin{columns}[T]
+\begin{frame}{Nomenclatura}
+  \begin{columns}[c]
     \begin{column}{0.52\textwidth}
       \begin{itemize}
-        \item I neuroni si organizzano in \textbf{layer}: input, layer
-              \textbf{nascosti}, output.
+        \setlength{\itemsep}{1em}
+        \item I neuroni si organizzano in \textbf{layer}: input, layer \textbf{nascosti}, output.
         \item Rete \textbf{deep-$L$}: $L$ = numero di layer nascosti + output.
-        \item $\theta_{ik}^{(l)}$ = peso dall'unità $k$ del layer $l$ all'unità
-              $i$ del layer $l+1$; $\Theta^{(l)}$ ne è la matrice.
+        \item $\theta_{ik}^{(l)}$ = peso dall'unità $k$ del layer $l$ all'unità $i$ del layer $l+1$; $\Theta^{(l)}$ ne è la matrice.
       \end{itemize}
     \end{column}
-    \begin{column}{0.48\textwidth}
-      \begin{block}{Feature nascoste}
-        La rete \textbf{scopre da sola} le feature nascoste; la semantica la
-        diamo noi.
-        \\[4pt]
-        Es.\ prezzo di una casa: se la prima unità nascosta ha pesi quasi nulli
-        da CAP e reddito, è ragionevole interpretarla come ``dimensione della
-        famiglia''. Altre unità possono rappresentare la vicinanza ai servizi o
-        la qualità delle scuole.
-      \end{block}
+
+    \begin{column}{0.60\textwidth}
+      \begin{figure}
+        \centering
+        \includegraphics[width=0.9\linewidth]{figure/FF_NN.png}
+        \label{fig:placeholder}
+      \end{figure}
     \end{column}
   \end{columns}
 \end{frame}
+
+
+
 
 \begin{frame}{Forward propagation}
   L'output di un layer è l'input del successivo:
@@ -182,39 +161,11 @@
     \item Ogni passo è un \textbf{prodotto matrice-vettore} seguito da
           $\varphi$ applicata elemento per elemento.
   \end{itemize}
-  \begin{block}{Perché non lineari?}
-    Con sole attivazioni \textbf{lineari} basterebbe \textbf{una sola unità}:
-    la composizione di funzioni lineari è lineare. Con attivazioni non lineari
-    la rete diventa un \alert{approssimatore universale di funzioni}.
+   \begin{block}{Perché funzioni non lineari?}
+    Con attivazioni \textbf{lineari}, la composizione di più layer equivale a un \textbf{singolo layer lineare}. Un modello puramente lineare può solo tracciare iperpiani rigidi nello spazio dei dati, risultando inadeguato.
   \end{block}
 \end{frame}
 
-\begin{frame}{Perché reti profonde}
-  \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \begin{block}{Apprendimento gerarchico}
-        Ogni layer costruisce feature più astratte a partire da quelle del
-        layer precedente:
-        \begin{itemize}
-          \item visione: bordi $\to$ parti del volto $\to$ volti $\to$ classe;
-          \item audio: forme d'onda $\to$ fonemi $\to$ parole $\to$ frasi.
-        \end{itemize}
-      \end{block}
-    \end{column}
-    \begin{column}{0.5\textwidth}
-      \begin{block}{Teoria dei circuiti}
-        Ci sono funzioni che una rete profonda e piccola calcola con
-        $O(\log n)$ layer, mentre una rete poco profonda richiede un numero
-        \textbf{esponenziale} di unità.
-      \end{block}
-    \end{column}
-  \end{columns}
-  \vspace{0.3cm}
-  \begin{center}
-    \small Nel detector la gerarchia è visibile: i primi filtri della ResNet
-    rispondono ai bordi, gli ultimi a oggetti interi.
-  \end{center}
-\end{frame}
 
 \begin{frame}{Funzioni di attivazione}
   \small
@@ -246,96 +197,92 @@
           classificazione binaria, \textbf{softmax} per la multiclasse.
   \end{itemize}
 \end{frame}
-
-\begin{frame}{Pro e contro delle attivazioni}
+\begin{frame}{Pro e contro delle funzioni di attivazione}
   \small
-  \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
-      \begin{block}{Logistica e tanh}
+  \begin{columns}[T, totalwidth=\textwidth]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{\centering Logistica (Sigmoide) e $\tanh$}
         \begin{itemize}
-          \item[+] Derivabili ovunque; la logistica ha range $[0,1]$, adatto
-                alle probabilità; $\tanh$ è centrata in 0.
-          \item[--] \textbf{Saturazione}: per $|z|$ grande la derivata è quasi 0
-                e i pesi in ingresso non si aggiornano più.
-          \item[--] La logistica è sempre positiva: tutti i pesi di un neurone
-                si aggiornano nella \textbf{stessa direzione}. Con $\tanh$ possono
-                muoversi in direzioni opposte.
-          \item[--] Mai esattamente 0: nessuna \textbf{sparsità}; serve un
-                esponenziale.
+          \setlength{\itemsep}{0.3em}
+          \item[\textcolor{green!60!black}{\textbf{+}}] \textbf{Derivabili} ovunque.
+          \item[\textcolor{green!60!black}{\textbf{+}}] Logistica in $[0,1]$ (ottima per probabilità); $\tanh$ è centrata in 0.
+          \item[\textcolor{red}{\textbf{--}}] \textbf{Saturazione:} per $|z|$ grande il gradiente tende a 0 (vanishing gradient).
+          \item[\textcolor{red}{\textbf{--}}] Logistica sempre positiva (gli aggiornamenti dei pesi oscillano).
+          \item[\textcolor{red}{\textbf{--}}] \textbf{Nessuna sparsità} (mai esattamente 0) e costo computazionale elevato ($\exp$).
         \end{itemize}
       \end{block}
     \end{column}
-    \begin{column}{0.5\textwidth}
-      \begin{block}{ReLU}
+
+    \begin{column}{0.48\textwidth}
+      \begin{block}{\centering ReLU}
         \begin{itemize}
-          \item[+] Semplice da calcolare, anche la derivata.
-          \item[+] \textbf{Non satura}: il gradiente resta proporzionale
-                all'attivazione.
-          \item[+] Produce zeri veri: \textbf{sparsità}. In una rete grande
-                ogni input attiva solo le unità dedicate a riconoscerlo.
-          \item[--] \emph{Dying ReLU}: un'unità sempre a 0 non impara più
-                $\to$ \textbf{Leaky ReLU} o \textbf{ELU}.
+          \setlength{\itemsep}{0.3em}
+          \item[\textcolor{green!60!black}{\textbf{+}}] \textbf{Computazione efficiente} (soluzione veloce e derivata immediata).
+          \item[\textcolor{green!60!black}{\textbf{+}}] \textbf{Non satura} per $z > 0$ (evita il vanishing gradient).
+          \item[\textcolor{green!60!black}{\textbf{+}}] Genera \textbf{sparsità}: produce zeri effettivi disattivando neuroni non necessari.
+          \item[\textcolor{red}{\textbf{--}}] \textbf{Dying ReLU:} se un neurone muore (sempre $0$), non impara più.
         \end{itemize}
       \end{block}
     \end{column}
   \end{columns}
-  \vspace{0.1cm}
-  \begin{center}
-    \textbf{ReLU + inizializzazione di He} è lo stato dell'arte nelle reti
-    feedforward e convoluzionali.
-  \end{center}
 \end{frame}
 
-\begin{frame}{Loss e funzione di costo}
+\begin{frame}{Loss e Funzione di Costo}
   \small
-  La \textbf{loss} $\ell(\hat{y},y)$ confronta il valore predetto $\hat{y}$ con
-  quello atteso $y$; il \textbf{costo} è la media sugli $m$ esempi:
-  \[ J(\Theta) = \frac{1}{m}\sum_{i=1}^{m} \ell\big(h_\Theta(\mathbf{x}^{(i)}),
-     y^{(i)}\big) \]
-  \vspace{-0.3cm}
+  \textbf{Loss} $\ell(\hat{y},y)$: errore sul singolo esempio. \\
+  \textbf{Costo} $J(\Theta)$: media dell'errore su $m$ esempi:
+  $J(\Theta) = \frac{1}{m}\sum_{i=1}^{m} \ell\big(h_\Theta(\mathbf{x}^{(i)}), y^{(i)}\big)$
+
+  \vspace{0.2cm}
+
   \begin{center}
-  \begin{tabular}{llll}
-    \toprule
-    Loss & Formula & Etichette & Derivata \\
-    \midrule
-    Quadratica & $\tfrac{1}{2}(\hat{y}-y)^2$ & $y\in\mathbb{R}$ & $\hat{y}-y$ \\[3pt]
-    Cross-entropy & $-y\log\hat{y}-(1-y)\log(1-\hat{y})$ & $y\in\{0,1\}$ &
-      $\dfrac{\hat{y}-y}{\hat{y}(1-\hat{y})}$ \\[8pt]
-    Logistica & $\log\big(1+e^{-yz}\big)$ & $y\in\{-1,+1\}$ &
-      $-\dfrac{y\,e^{-yz}}{1+e^{-yz}}$ \\[8pt]
-    Hinge & $\max(0,1-yz)$ & $y\in\{-1,+1\}$ & $-y$ se $yz<1$, $0$ altrimenti \\
-    \bottomrule
-  \end{tabular}
+    \footnotesize
+    \begin{tabular}{lll}
+      \toprule
+      \textbf{Loss} & \textbf{Ambito} & \textbf{Formula} \\
+      \midrule
+      \textbf{MSE} & Regressione ($y \in \mathbb{R}$) & $\frac{1}{2}(\hat{y}-y)^2$ \\[2pt]
+      \textbf{Cross-Entropy} & Class. Binaria ($y \in \{0,1\}$) & $-y\log\hat{y}-(1-y)\log(1-\hat{y})$ \\[2pt]
+      \textbf{Softmax + CE} & Class. Multiclasse & $-\sum_{i} y_i \log \hat{y}_i$ \\
+      \bottomrule
+    \end{tabular}
   \end{center}
+
   \vspace{0.1cm}
-  \textbf{Multiclasse}: softmax $\Pr(y=c_i\mid\mathbf{x}) = e^{z_i}/\sum_{j}e^{z_j}$
-  con cross-entropy $-\sum_i y_i\log\hat{y}_i$; con due classi la softmax si
-  riduce alla logistica.
-  \\[4pt]
-  {\footnotesize Il detector usa la quadratica per le box, la cross-entropy
-  binaria per la presenza di un oggetto e la softmax per la classe.}
+
+  \begin{block}{Esempio: Object Detector (es. YOLO)}
+    \scriptsize
+    Combinazione di più loss in un unico modello:
+    \begin{itemize}
+      \item \textbf{MSE} per la posizione della bounding box.
+      \item \textbf{Cross-Entropy Binaria} per la presenza dell'oggetto.
+      \item \textbf{Softmax} per la classe dell'oggetto.
+    \end{itemize}
+  \end{block}
 \end{frame}
+
 
 % ==================================================================
 \section{Addestrare una rete profonda}
 % ==================================================================
-
-\begin{frame}{Gradient descent}
+\begin{frame}{Gradient Descent}
+  \small
   \begin{block}{Regola di aggiornamento}
-    Ogni peso si sposta nella direzione \textbf{opposta al gradiente} della
-    funzione di errore $E$:
+    Ogni peso si sposta nella direzione \textbf{opposta al gradiente}:
     \[ w_{ij} := w_{ij} - \eta\,\frac{\partial E}{\partial w_{ij}} \]
-    con $\eta$ = \textbf{learning rate} (ampiezza del passo).
   \end{block}
+
+  \vspace{-0.1cm}
+  
   \begin{itemize}
-    \item $\eta$ troppo grande $\to$ grandi salti che mancano il minimo;
-          troppo piccolo $\to$ convergenza lentissima.
-    \item Il gradiente rispetto a \textbf{tutti} i pesi si calcola con la
-          backpropagation.
-    \item Varianti per rendere la discesa più veloce e stabile: mini-batch,
-          Momentum, RMSprop, Adam.
+    \item \textbf{Derivata parziale} $\frac{\partial E}{\partial w_{ij}}$: indica quanto varia l'errore $E$ modificando il solo peso $w_{ij}$ (con gli altri costanti).
+    \item \textbf{Learning rate ($\eta$)}: regola l'ampiezza del passo. Se troppo grande sbalza oltre il minimo, se troppo piccolo la convergenza è lentissima.
+    \item \textbf{Backpropagation}: calcola le derivate parziali per tutti i pesi.
+    \item \textbf{Ottimizzatori avanzati}: Mini-batch, Momentum, RMSprop, Adam.
   \end{itemize}
 \end{frame}
+
+
 
 \begin{frame}{Backpropagation}
   Si propaga l'errore \textbf{all'indietro}, dal layer di output verso l'input,
@@ -460,10 +407,10 @@
       \end{block}
     \end{column}
   \end{columns}
-  \vspace{0.2cm}
+  \vspace{0.05cm}
   \begin{center}
-    Nel progetto: augmentation nel detector, dropout dentro BERT, scelta del
-    checkpoint sul validation in entrambi.
+    \footnotesize Nel progetto: augmentation nel detector, dropout dentro
+    BERT, scelta del checkpoint sul validation in entrambi.
   \end{center}
 \end{frame}
 
@@ -513,7 +460,7 @@
 \end{frame}
 
 \begin{frame}{Momentum, RMSprop, Adam}
-  \small
+  \footnotesize
   Sia $dw_{ij} = \partial E/\partial w_{ij}$, calcolato sul mini-batch.
   \begin{columns}[T]
     \begin{column}{0.33\textwidth}
@@ -544,7 +491,6 @@
       \end{block}
     \end{column}
   \end{columns}
-  \vspace{0.1cm}
   \begin{center}
     Adam è l'ottimizzatore di \textbf{entrambi} gli esercizi (nell'Es.\ 2 nella
     variante AdamW).
@@ -687,11 +633,12 @@
 \end{frame}
 
 \begin{frame}{Il problema: localizzazione con bounding box}
+  \small
   \begin{block}{Object detection}
     Data un'immagine, individuare \textbf{quali} oggetti contiene e \textbf{dove}
     si trovano, disegnando una \emph{bounding box} attorno a ciascuno.
   \end{block}
-  \vspace{0.3cm}
+  \vspace{0.15cm}
   \textbf{Dataset: Object365} (365 classi, 600k immagini, 10M box).
   \begin{itemize}
     \item Volume incompatibile con un PC $\Rightarrow$ \alert{subsampling} su due assi.
@@ -709,6 +656,7 @@
 \end{frame}
 
 \begin{frame}{Dalla sliding window a YOLO}
+  \small
   \begin{columns}[T]
     \begin{column}{0.54\textwidth}
       \textbf{Sliding window}: si fa scorrere una finestra e si classifica ogni ritaglio.
@@ -716,7 +664,7 @@
         \item Problema principale: \alert{costo computazionale}.
         \item Soluzione: implementarla \textbf{convoluzionalmente}.
       \end{itemize}
-      \vspace{0.2cm}
+      \vspace{0.1cm}
       \textbf{YOLO}: griglia $S\times S$; ogni oggetto assegnato a \textbf{una cella}
       (quella del suo centro), che ne predice box e classe.
     \end{column}
@@ -726,7 +674,7 @@
         cella, ognuno va all'anchor più simile per forma (IoU).
       \end{block}
       \centering
-      \includegraphics[width=0.86\textwidth]{anchor.pdf}
+      \includegraphics[width=0.72\textwidth]{anchor.pdf}
     \end{column}
   \end{columns}
 \end{frame}
@@ -754,6 +702,7 @@
 \end{frame}
 
 \begin{frame}[fragile]{Architettura della rete}
+  \small
   Backbone convoluzionale con downsampling $\times 32$, seguito da una
   \textbf{testa di detection} $1\times1$ scritta da noi.
   \begin{columns}[T]
@@ -767,7 +716,7 @@ Input  3 x 416 x 416
   Testa 1x1 -> A*(5+C) = 65 canali
 Output (5, 26, 26, 13)
       \end{semiverbatim}}
-      \vspace{0.1cm}
+      \vspace{0.05cm}
       \begin{itemize}
         \item Rete \textbf{completamente convoluzionale}.
         \item \textbf{3.380} box candidate per immagine ($5\times26\times26$).
@@ -781,7 +730,7 @@ Output (5, 26, 26, 13)
       \end{block}
       {\footnotesize Anchor, target, loss, IoU e NMS restano \textbf{implementati a
       mano}: cambia solo l'estrattore di feature.}
-      \vspace{0.15cm}
+      \vspace{0.08cm}
       {\footnotesize Il \textbf{troncamento} decide il compromesso: stride piccolo
       $\to$ griglia fine ma campo recettivo ridotto; stride grande $\to$ vede più
       contesto ma celle grossolane.}
@@ -790,6 +739,7 @@ Output (5, 26, 26, 13)
 \end{frame}
 
 \begin{frame}{La loss YOLO}
+  \small
   La rete predice \emph{logit grezzi}, decodificati come (YOLOv2):
   \[
     b_x=\sigma(t_x)+c_x,\quad b_y=\sigma(t_y)+c_y,\quad
@@ -863,12 +813,13 @@ Output (5, 26, 26, 13)
 \end{frame}
 
 \begin{frame}{Ottimizzazione e risultati}
+  \small
   \begin{columns}[T]
     \begin{column}{0.58\textwidth}
       \centering
-      \includegraphics[width=\textwidth]{esperimenti.png}\\[2pt]
+      \includegraphics[width=0.94\textwidth]{esperimenti.png}\\[1pt]
       {\footnotesize Un esperimento per modifica: così ogni guadagno ha una causa.}
-      \vspace{0.15cm}
+      \vspace{0.08cm}
       \begin{itemize}
         \item[] {\footnotesize \alert{stride 16} \textbf{+0,121} (campo recettivo
               $\sim$275 px invece di 131) $\cdot$ \alert{augmentation} \textbf{+0,043}
@@ -878,6 +829,7 @@ Output (5, 26, 26, 13)
       \end{itemize}
     \end{column}
     \begin{column}{0.42\textwidth}
+      \footnotesize
       Modello finale sul \textbf{test set}, valutato \textbf{una sola volta}:
       \begin{center}
       \begin{tabular}{lr}
@@ -888,16 +840,16 @@ Output (5, 26, 26, 13)
         \bottomrule
       \end{tabular}
       \end{center}
-      {\footnotesize Baseline 0,221 $\Rightarrow$ \textbf{il doppio}. Per classe:
-      Person 0,72, Table 0,19 (tavoli coperti e tagliati).}
-      \vspace{0.2cm}
+      Baseline 0,221 $\Rightarrow$ \textbf{il doppio}. Per classe:
+      Person 0,72, Table 0,19 (tavoli coperti e tagliati).
+      \vspace{0.1cm}
 
       Recall oggetti \textbf{grandi} 0,58 $>$ \textbf{medi} 0,51: il problema del
       campo recettivo è risolto (nella baseline 0,38 contro 0,56).
-      \vspace{0.2cm}
+      \vspace{0.1cm}
 
-      {\footnotesize \textbf{Demo dal vivo nel notebook}: detection su una foto
-      scattata con il telefono, mai vista dal modello.}
+      \textbf{Demo dal vivo nel notebook}: detection su una foto
+      scattata con il telefono, mai vista dal modello.
     \end{column}
   \end{columns}
 \end{frame}
@@ -983,9 +935,9 @@ Output (5, 26, 26, 13)
           \item \textbf{Multi-head self-attention}
           \item \textbf{Rete feed-forward} (applicata a ogni posizione)
         \end{enumerate}
-        Ciascuno con una \textbf{connessione residua} (skip) e una
-        \textbf{layer normalization}:
-        \[ \mathrm{LayerNorm}\big(x + \mathrm{Sublayer}(x)\big) \]
+        Ciascuno preceduto da una \textbf{layer normalization} e seguito da una
+        \textbf{connessione residua} (skip, \emph{Pre-LN}):
+        \[ x + \mathrm{Sublayer}\big(\mathrm{LayerNorm}(x)\big) \]
       \end{block}
       Impilando più blocchi si ottiene il Transformer.
     \end{column}
@@ -1098,7 +1050,7 @@ Output (5, 26, 26, 13)
 \end{frame}
 
 \begin{frame}{Aderenza al programma del corso}
-  \small
+  \footnotesize
   \textbf{Nucleo del progetto: tecniche viste a lezione.} YOLO con griglia, anchor
   scelti a mano e assegnati per IoU, NMS; etichette \emph{don't care} (le nostre
   \textbf{regioni ignorate}); CNN, ResNet34, batch norm; \textbf{transfer learning}
@@ -1106,6 +1058,7 @@ Output (5, 26, 26, 13)
   Adam, regolarizzazione L2, early stopping; data augmentation.
   \begin{block}{Aggiunto oltre il programma, con motivazione}
     \begin{itemize}
+      \setlength{\itemsep}{1pt}
       \item \textbf{mAP@0.5} (Es.\ 1): precision e recall dipendono dalla soglia,
             quindi non confrontano modelli calibrati diversamente.
       \item \textbf{Learning rate variabile}: decadimento coseno (Es.\ 1, +0,008 di
@@ -1118,6 +1071,7 @@ Output (5, 26, 26, 13)
             ridurre tempo e memoria.
     \end{itemize}
   \end{block}
+  \vspace{-2pt}
   \begin{center}
     Le aggiunte in Es.\ 1 sono state \textbf{misurate} con esperimenti controllati.
   \end{center}
