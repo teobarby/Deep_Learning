@@ -539,13 +539,13 @@
   \end{block}
   \vspace{0.2cm}
   \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.48\textwidth}
       \begin{block}{Object detection}
         Immagini $\to$ rete \textbf{convoluzionale}, che sfrutta la struttura
         spaziale dei pixel. \emph{Architettura YOLO.}
       \end{block}
     \end{column}
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.48\textwidth}
       \begin{block}{Sentiment analysis}
         Frasi $\to$ \textbf{Transformer}, che mette in relazione ogni parola con
         tutte le altre. \emph{Modello BERT.}
@@ -789,7 +789,7 @@ Output (5, 26, 26, 13)
 
 \begin{frame}{Come si misura un detector}
   \begin{columns}[T]
-    \begin{column}{0.52\textwidth}
+    \begin{column}{0.50\textwidth}
       Una predizione è \textbf{corretta} se ha IoU $\geq 0{,}5$ con un oggetto della
       stessa classe non ancora abbinato; le altre sono falsi positivi.
       \[ P=\frac{TP}{TP+FP}\qquad R=\frac{TP}{N_{ogg}}\qquad F_1=\frac{2PR}{P+R} \]
@@ -798,7 +798,7 @@ Output (5, 26, 26, 13)
         Confrontare modelli a soglia fissa è ingannevole.
       \end{alertblock}
     \end{column}
-    \begin{column}{0.48\textwidth}
+    \begin{column}{0.44\textwidth}
       \begin{block}{mAP@0.5}
         Si fa variare la soglia, si costruisce la curva \textbf{precision--recall} e
         se ne prende l'\textbf{area} (AP), mediata sulle classi.
@@ -928,7 +928,7 @@ Output (5, 26, 26, 13)
 
 \begin{frame}{Il blocco Transformer}
   \begin{columns}[T]
-    \begin{column}{0.54\textwidth}
+    \begin{column}{0.52\textwidth}
       \begin{block}{Un blocco impila due sotto-strati}
         \begin{enumerate}
           \item \textbf{Multi-head self-attention}
@@ -940,7 +940,7 @@ Output (5, 26, 26, 13)
       \end{block}
       Impilando più blocchi si ottiene il Transformer.
     \end{column}
-    \begin{column}{0.46\textwidth}
+    \begin{column}{0.44\textwidth}
       \begin{block}{Positional encoding}
         La self-attention è \emph{permutation equivariant}: si \textbf{somma} a
         ogni token un vettore che ne codifica la \textbf{posizione}, così il
