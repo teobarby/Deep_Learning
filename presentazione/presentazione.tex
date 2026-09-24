@@ -76,7 +76,7 @@
   ad alto impatto: visione, linguaggio, parlato.
   \vspace{0.1cm}
   \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.48\textwidth}
       \begin{block}{Machine learning classico}
         \centering
         {\footnotesize dati $\to$ \textbf{feature definite a mano}
@@ -86,7 +86,7 @@
         passo \emph{fondamentale} della pipeline.}
       \end{block}
     \end{column}
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.48\textwidth}
       \begin{block}{Deep learning}
         \centering
         {\footnotesize dati $\to$ trasformazioni \textbf{apprese}
@@ -311,14 +311,14 @@
   \[ \frac{\partial C}{\partial b_1} = \sigma'(z_1)\, w_2\, \sigma'(z_2)\,
      w_3\, \sigma'(z_3)\, w_4\, \sigma'(z_4)\, \frac{\partial C}{\partial a_4} \]
   \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.48\textwidth}
       \begin{block}{Vanishing}
         Se ogni prodotto $w_i\,\sigma'(z_i) < 1$ il gradiente \textbf{svanisce}.
         Con la logistica $0 \le \sigma'(z) \le 0.25$ e pesi da
         $\mathcal{N}(0,1)$ succede facilmente.
       \end{block}
     \end{column}
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.48\textwidth}
       \begin{block}{Exploding}
         Se ogni prodotto $w_i\,\sigma'(z_i) > 1$, per esempio con pesi
         inizializzati grandi, il gradiente \textbf{esplode} verso i primi layer.
@@ -375,7 +375,7 @@
 \begin{frame}{Dropout, data augmentation, early stopping}
   \small
   \begin{columns}[T]
-    \begin{column}{0.36\textwidth}
+    \begin{column}{0.34\textwidth}
       \begin{block}{Dropout}
         Alternativa alla L2: ogni nodo viene \textbf{eliminato} con
         probabilità $p$.
@@ -388,7 +388,7 @@
         \end{itemize}
       \end{block}
     \end{column}
-    \begin{column}{0.30\textwidth}
+    \begin{column}{0.28\textwidth}
       \begin{block}{Data augmentation}
         Nuovi esempi trasformando quelli esistenti: flip, crop, zoom,
         rotazioni, distorsioni, variazioni di colore.
@@ -396,7 +396,7 @@
         Riduce l'overfitting ed è naturale nella visione.
       \end{block}
     \end{column}
-    \begin{column}{0.34\textwidth}
+    \begin{column}{0.32\textwidth}
       \begin{block}{Early stopping}
         Si ferma il training quando l'errore sul validation ricomincia a
         salire.
@@ -462,7 +462,7 @@
   \footnotesize
   Sia $dw_{ij} = \partial E/\partial w_{ij}$, calcolato sul mini-batch.
   \begin{columns}[T]
-    \begin{column}{0.33\textwidth}
+    \begin{column}{0.31\textwidth}
       \begin{block}{Momentum}
         Media mobile del \textbf{gradiente}:
         \[ \nu_{ij} = \beta\,\nu_{ij} + (1-\beta)\,dw_{ij} \]
@@ -471,7 +471,7 @@
         $\eta$ piccolo; di solito senza bias correction.
       \end{block}
     \end{column}
-    \begin{column}{0.33\textwidth}
+    \begin{column}{0.31\textwidth}
       \begin{block}{RMSprop}
         Media mobile del \textbf{quadrato} del gradiente:
         \[ \nu_{ij} = \beta\,\nu_{ij} + (1-\beta)\,dw_{ij}^2 \]
@@ -480,7 +480,7 @@
         viceversa.
       \end{block}
     \end{column}
-    \begin{column}{0.34\textwidth}
+    \begin{column}{0.32\textwidth}
       \begin{block}{Adam (\emph{ADAptive Momentum})}
         Momentum + RMSprop con bias correction:
         \[ \nu_{ij} = \tfrac{1}{1-\beta_1^t}\big(\beta_1\nu_{ij} + (1-\beta_1)dw_{ij}\big) \]
@@ -589,7 +589,7 @@
 
 \begin{frame}{CNN: padding, stride, pooling}
   \begin{columns}[T]
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.48\textwidth}
       \begin{block}{Iperparametri della convoluzione}
         \begin{itemize}
           \item \textbf{Padding}: bordo di zeri; \emph{same} mantiene la
@@ -600,7 +600,7 @@
         \end{itemize}
       \end{block}
     \end{column}
-    \begin{column}{0.5\textwidth}
+    \begin{column}{0.48\textwidth}
       \begin{block}{Pooling}
         Il \textbf{max pooling} tiene il valore massimo di ogni regione:
         riduce la dimensione e agisce da rilevatore di feature.
