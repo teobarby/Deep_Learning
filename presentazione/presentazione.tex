@@ -987,15 +987,15 @@ Output (5, 26, 26, 13)
         \toprule
         Metrica & Valore \\
         \midrule
-        Accuracy & \textbf{89,8\%} \\
-        F1 & \textbf{0,902} \\
-        Precision & 0,885 \\
-        Recall & 0,919 \\
+        Accuracy & \textbf{89,0\%} \\
+        F1 & \textbf{0,893} \\
+        Precision & 0,882 \\
+        Recall & 0,905 \\
         \bottomrule
       \end{tabular}
       \end{center}
       \vspace{0.2cm}
-      Errori: 53 negative $\to$ positive, 36 positive $\to$ negative.
+      Errori: 54 negative $\to$ positive, 42 positive $\to$ negative.
       Leggera tendenza verso \emph{positive}: il 56\% del train è positivo.
     \end{column}
     \begin{column}{0.5\textwidth}
@@ -1010,14 +1010,14 @@ Output (5, 26, 26, 13)
   \begin{block}{Output del modello}
     {\footnotesize\ttfamily
     {}[positive~~99.9\%] I absolutely loved this film\\
-    {}[negative~~99.5\%] the worst purchase I have ever made\\
+    {}[negative~~99.6\%] the worst purchase I have ever made\\
     {}[positive~~99.8\%] It is not bad at all, quite enjoyable\\
-    {}[negative~~75.3\%] predictable but the acting saved it}
+    {}[negative~~83.2\%] the acting was fine, the story less so}
   \end{block}
   \begin{itemize}
     \item \emph{``not bad''}: contiene \emph{bad} ma è classificata \textbf{positiva} al 99,8\%.
           L'attention collega \emph{bad} a \emph{not} --- è l'\alert{esempio della slide 11}.
-    \item Frase ambigua $\Rightarrow$ confidenza bassa (75\%): il modello \emph{segnala} l'incertezza.
+    \item Frase a sentimento misto $\Rightarrow$ confidenza più bassa (83\%): il modello \emph{segnala} l'incertezza.
   \end{itemize}
 \end{frame}
 
@@ -1035,7 +1035,7 @@ Output (5, 26, 26, 13)
     Dati & 14.361 immagini, 8 classi & SST-2, 20.000 frasi \\
     Metodo & train / validation / test separati & train / validation / test separati \\
     Ottimizzazione & 8 esperimenti controllati & --- \\
-    Risultati (test) & \textbf{mAP@0.5 0,444} (da 0,221) & \textbf{Acc.\ 89,8\% --- F1 0,902} \\
+    Risultati (test) & \textbf{mAP@0.5 0,444} (da 0,221) & \textbf{Acc.\ 89,0\% --- F1 0,893} \\
     \bottomrule
   \end{tabular}
   \end{center}

@@ -39,10 +39,10 @@ Metriche sul **test set** (872 frasi), F1/precision/recall riferiti alla classe 
 
 | Accuracy | F1 | Precision | Recall |
 |---|---|---|---|
-| 89,8% | 0,902 | 0,885 | 0,919 |
+| 89,0% | 0,893 | 0,882 | 0,905 |
 
-Errori: 53 frasi negative classificate positive, 36 positive classificate negative.
-Sul validation (usato per scegliere il checkpoint) l'accuracy è 93,3%: più alta
+Errori: 54 frasi negative classificate positive, 42 positive classificate negative.
+Sul validation (usato per scegliere il checkpoint) l'accuracy è 93,0%: più alta
 perché quelle frasi provengono dal train di SST-2, che contiene sotto-frasi delle
 stesse recensioni.
 
